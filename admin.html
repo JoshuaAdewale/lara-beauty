@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0A0A0A">
+<title>Staff Portal · Lara Beauty Atelier</title>
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="googlebot" content="noindex,nofollow">
+<link rel="icon" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login" id="login" style="display:none">
+  <div class="login-box">
+    <img src="assets/logo-transparent.png" alt="Lara Beauty Atelier">
+    <h1>Staff Portal</h1>
+    <p class="muted">Authorised personnel only</p>
+    <form onsubmit="doLogin(event)" autocomplete="off">
+      <div class="f"><label>Email</label><input id="lu" type="email" placeholder="you@larabeauty.ng" required autocomplete="off"></div>
+      <div class="f"><label>Password</label><input id="lp" type="password" placeholder="••••••••" required autocomplete="new-password"></div>
+      <button class="btn btn-primary btn-block" style="margin-top:8px" type="submit">Sign in</button>
+    </form>
+    <p class="hint" id="lockmsg" style="color:var(--bad);display:none"></p>
+    <p class="hint">This area is restricted. All activity is logged.</p>
+    <p class="hint"><a href="index.html" style="color:var(--gold)">← Back to storefront</a></p>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="adm" id="app" style="display:none">
+  <aside class="side" id="side">
+    <a href="index.html" class="logo" style="gap:10px">
+      <img src="assets/logo-transparent.png" alt="" style="height:40px">
+      <span class="lt"><b>LARA BEAUTY</b><small>Admin</small></span></a>
+    <a data-v="dash" onclick="nav('dash')"><svg viewBox="0 0 24 24"><path d="M4 13h7V4H4zM13 9h7V4h-7zM13 20h7v-9h-7zM4 20h7v-5H4z"/></svg>Dashboard</a>
+    <a data-v="orders" onclick="nav('orders')"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg>Orders</a>
+    <a data-v="pages" onclick="nav('pages')"><svg viewBox="0 0 24 24"><path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5M8 13h8M8 17h5"/></svg>Pages &amp; Content</a>
+    <a data-v="categories" onclick="nav('categories')"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Categories</a>
+    <a data-v="media" onclick="nav('media')"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><circle cx="9" cy="10" r="2"/><path d="m5 18 5-5 3 3 3-3 3 3"/></svg>Media</a>
+    <a data-v="products" onclick="nav('products')"><svg viewBox="0 0 24 24"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5 12 12l8-4.5M12 12v9"/></svg>Products</a>
+    <a data-v="inventory" onclick="nav('inventory')"><svg viewBox="0 0 24 24"><path d="M4 7h16v13H4z"/><path d="M4 7l2-3h12l2 3M9 12h6"/></svg>Inventory</a>
+    <a data-v="customers" onclick="nav('customers')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>Customers</a>
+    <a data-v="reviews" onclick="nav('reviews')"><svg viewBox="0 0 24 24"><path d="m12 3 2.6 5.6 6 .7-4.4 4 1.2 6L12 16.4 6.6 19.3l1.2-6-4.4-4 6-.7z"/></svg>Reviews</a>
+    <a data-v="marketing" onclick="nav('marketing')"><svg viewBox="0 0 24 24"><path d="M3 10h4l8-5v14l-8-5H3z"/><path d="M18 9a4 4 0 0 1 0 6"/></svg>Marketing</a>
+    <a data-v="analytics" onclick="nav('analytics')"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16"/><path d="m7 15 4-5 3 3 5-7"/></svg>Analytics</a>
+    <a data-v="settings" onclick="nav('settings')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>Settings</a>
+    <div class="sep">
+      <div style="padding:8px 14px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)" id="who"></div>
+      <a href="index.html" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M4 12h16M12 4l8 8-8 8"/></svg>View storefront</a>
+      <a onclick="logout()"><svg viewBox="0 0 24 24"><path d="M14 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2"/><path d="M9 12h11l-3-3M20 12l-3 3"/></svg>Sign out</a>
+    </div>
+  </aside>
+
+  <div class="amain">
+    <div class="abar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="icon-btn aburger" onclick="document.getElementById('side').classList.toggle('on')" aria-label="Menu">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+        <div><h1 id="ttl">Dashboard</h1><p class="sub" id="sub"></p></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="exportCSV()">Export CSV</button>
+        <button class="btn btn-primary btn-sm" onclick="editProduct()">+ New product</button>
+      </div>
+    </div>
+    <div id="view"></div>
+  </div>
+</div>
+
+<div class="modal" id="modal" onclick="if(event.target===this)closeModal()"><div class="modal-box" id="modal-body"></div></div>
+<div class="modal" id="modal2" style="z-index:140" onclick="if(event.target===this)closeModal2()"><div class="modal-box" id="modal2-body"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

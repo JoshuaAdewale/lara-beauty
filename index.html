@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0A0A0A">
+<title>Lara Beauty Atelier — Skin Glow Oil, Black Soap & Lip Care</title>
+<meta name="description" content="Lara Beauty Atelier crafts small-batch Skin Glow Oil, Natural Fairness Black Soap, Pink Lips Balm and lip gloss for women of every age and shade. Free delivery over ₦25,000.">
+<link rel="icon" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="announce" id="announce">Free delivery on orders over ₦25,000 · Nationwide · Pay on delivery available</div>
+
+<header id="hdr">
+  <div class="wrap nav">
+    <a href="#/" class="logo">
+      <img src="assets/logo-transparent.png" alt="Lara Beauty Atelier">
+      <span class="lt"><b>LARA BEAUTY</b><small>Atelier</small></span>
+    </a>
+    <nav class="nav-links" id="navlinks"></nav>
+    <div class="nav-act">
+      <button class="icon-btn" onclick="openSearch()" aria-label="Search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+      <button class="icon-btn" onclick="openCart()" aria-label="Open cart">
+        <svg viewBox="0 0 24 24"><path d="M6 7h12l-1 13H7L6 7Z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
+        <i class="badge" id="badge">0</i></button>
+      <button class="icon-btn burger" onclick="toggleMenu(1)" aria-label="Menu">
+        <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<nav class="mmenu" id="mmenu"></nav>
+
+<main>
+  <div class="page" id="page-home"></div>
+
+  <!-- SHOP -->
+  <div class="page" id="page-shop">
+    <div class="wrap">
+      <div class="crumb"><a href="#/">Home</a> / <span id="shop-crumb">Shop all</span></div>
+      <div style="margin-bottom:30px"><h2 id="shop-title" style="font-size:clamp(30px,4.6vw,48px)"></h2><p class="muted" id="shop-sub"></p></div>
+      <div class="shop-top">
+        <div class="filters" id="filters"></div>
+        <div class="sortbar"><span id="count"></span>
+          <select class="sort" id="sort" onchange="renderShop()" aria-label="Sort">
+            <option value="feat">Featured</option><option value="low">Price: low to high</option>
+            <option value="high">Price: high to low</option><option value="rate">Top rated</option>
+            <option value="az">Alphabetical</option></select></div>
+      </div>
+      <div class="grid" id="grid"></div>
+    </div><section></section>
+  </div>
+
+  <div class="page" id="page-product"><div id="pdp"></div></div>
+  <div class="page" id="page-checkout"><div class="wrap" id="co"></div></div>
+  <div class="page" id="page-track"><div class="wrap" id="trk"></div></div>
+
+  <div class="page" id="page-done"><div class="wrap"><div class="done">
+    <div class="tick"><svg viewBox="0 0 24 24"><path d="M20 7 9 18l-5-5"/></svg></div>
+    <h1>Thank you, <span id="done-name">friend</span>.</h1>
+    <p>Your order is confirmed. A receipt is on its way to <b id="done-mail"></b>.</p>
+    <div class="ord" id="done-ord"></div>
+    <p class="muted" style="font-size:13.5px">We pack Monday to Saturday. You'll get a tracking link the moment your parcel leaves Abuja — usually within 48 hours.</p>
+    <div style="margin-top:28px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="go('#/shop')">Continue shopping</button>
+      <button class="btn btn-ghost" onclick="go('#/track')">Track my order</button></div>
+  </div></div></div>
+</main>
+
+<footer id="foot"></footer>
+
+<div class="scrim" id="scrim" onclick="closeAll()"></div>
+
+<aside class="drawer" id="drawer" aria-label="Shopping cart">
+  <div class="dr-head"><h3>Your bag <span class="muted" style="font-size:15px" id="dr-count"></span></h3>
+    <button class="icon-btn" onclick="closeAll()" aria-label="Close">
+      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="dr-body" id="dr-body"></div>
+  <div class="dr-foot" id="dr-foot"></div>
+</aside>
+
+<div class="modal" id="searchModal" onclick="if(event.target===this)closeSearch()">
+  <div class="modal-box">
+    <div class="mhead"><h3>Search products</h3>
+      <button class="icon-btn" onclick="closeSearch()" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <input type="search" id="sq" class="mini" style="width:100%;padding:14px 18px;border-radius:100px;font-size:15px" placeholder="Try “glow oil”, “lip”, “soap”…" oninput="runSearch()" autocomplete="off">
+    <div id="sres" style="margin-top:16px;display:grid;gap:8px;max-height:52vh;overflow-y:auto"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
