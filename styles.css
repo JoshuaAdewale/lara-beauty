@@ -304,7 +304,7 @@ button {
   font-weight: 500;
 }
 
-header {
+.site-header {
   position: sticky;
   top: 0;
   z-index: 60;
@@ -2769,13 +2769,13 @@ input.mini {
   /* HERO — image capped so copy is visible without scrolling */
   .hero {
     grid-template-columns: 1fr;
-    padding: 10px 0 14px;
-    gap: var(--sp-2xl);
+    padding: 8px 0 12px;
+    gap: 14px;
   }
   .hero-media {
     order: -1;
-    max-width: none;
-    margin: 0;
+    max-width: 360px;
+    margin: 0 auto;
     width: 100%;
   }
   .hero-media .frame {
@@ -2792,12 +2792,12 @@ input.mini {
     justify-content: stretch;
   }
   .hero-media .frame {
-    padding: var(--sp-2xs);
+    padding: 4px;
     border-radius: 14px;
   }
   .hero-media img {
-    height: auto;
-    aspect-ratio: 16/11;
+    height: 232px;
+    aspect-ratio: auto;
     object-fit: cover;
     object-position: center 20%;
     border-radius: var(--r-md);
@@ -2841,11 +2841,7 @@ input.mini {
     word-break: break-word;
   }
   .float-card {
-    position: static;
-    margin: 10px 0 0;
-    max-width: none;
-    animation: none;
-    padding: 10px 12px;
+    display: none;
   }
   .float-card img {
     width: 38px;
@@ -3122,6 +3118,14 @@ input.mini {
   }
   .story .imgwrap {
     padding: var(--sp-2xs);
+    max-width: 520px;
+    margin: 0 auto;
+  }
+  .story img {
+    width: 100% !important;
+    height: 220px !important;
+    aspect-ratio: 16 / 10 !important;
+    object-fit: cover !important;
   }
   .vals {
     grid-template-columns: 1fr 1fr;
