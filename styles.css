@@ -488,9 +488,9 @@ header.stuck {
   position: relative;
   display: grid;
   grid-template-columns: 1.02fr .98fr;
-  gap: clamp(28px, 5vw, 64px);
+  gap: clamp(20px, 3.4vw, 46px);
   align-items: center;
-  padding: clamp(40px, 7vw, 86px) 0 clamp(48px, 8vw, 96px);
+  padding: clamp(28px, 5vw, 68px) 0 clamp(36px, 6vw, 72px);
 }
 
 .hero::before {
@@ -508,8 +508,8 @@ header.stuck {
 }
 
 .hero-copy h1 {
-  font-size: clamp(42px, 7.4vw, 86px);
-  margin: 16px 0 20px;
+  font-size: clamp(38px, 6.3vw, 72px);
+  margin: 14px 0 16px;
   letter-spacing: -.02em;
 }
 
@@ -522,10 +522,10 @@ header.stuck {
 }
 
 .hero-copy p.lede {
-  font-size: clamp(15px, 1.6vw, 18px);
+  font-size: clamp(15px, 1.5vw, 17px);
   color: var(--mut);
-  max-width: 46ch;
-  margin-bottom: var(--sp-4xl);
+  max-width: 44ch;
+  margin-bottom: var(--sp-3xl);
 }
 
 .hero-cta {
@@ -536,9 +536,9 @@ header.stuck {
 
 .hero-stats {
   display: flex;
-  gap: clamp(18px, 3.4vw, 42px);
-  margin-top: clamp(28px, 4vw, 46px);
-  padding-top: 24px;
+  gap: clamp(14px, 2.4vw, 28px);
+  margin-top: clamp(24px, 3vw, 36px);
+  padding-top: 18px;
   border-top: 1px solid var(--line);
 }
 
@@ -654,13 +654,13 @@ header.stuck {
    9. SECTION HEADINGS
    -------------------------------------------------------------------------- */
 section {
-  padding: clamp(48px, 7vw, 92px) 0;
+  padding: clamp(36px, 5vw, 76px) 0;
 }
 
 .sec-head {
   text-align: center;
   max-width: 640px;
-  margin: 0 auto clamp(30px, 4vw, 52px);
+  margin: 0 auto clamp(22px, 3vw, 42px);
 }
 
 .sec-head h2 {
@@ -687,7 +687,7 @@ section {
 .cols {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--sp-2xl);
+  gap: clamp(14px, 2vw, 22px);
 }
 
 .col {
@@ -814,7 +814,7 @@ select.sort {
 .grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: clamp(14px, 2vw, 24px);
+  gap: clamp(12px, 1.8vw, 20px);
 }
 
 .card {
@@ -1459,12 +1459,12 @@ select.sort {
 .vals {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: var(--sp-xl);
+  gap: clamp(12px, 1.8vw, 18px);
   text-align: center;
 }
 
 .val {
-  padding: 28px 18px;
+  padding: 22px 14px;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: var(--r);
@@ -1499,7 +1499,7 @@ select.sort {
   background: var(--panel);
   border: 1px solid var(--gold-d);
   border-radius: var(--r);
-  padding: clamp(34px, 5vw, 62px) clamp(20px, 4vw, 40px);
+  padding: clamp(26px, 4vw, 48px) clamp(16px, 3vw, 28px);
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -1561,7 +1561,7 @@ footer {
 .foot {
   display: grid;
   grid-template-columns: 1.7fr 1fr 1fr 1fr;
-  gap: clamp(22px, 3vw, 40px);
+  gap: clamp(16px, 2.3vw, 28px);
 }
 
 .foot h5 {
@@ -1598,8 +1598,8 @@ footer {
 }
 
 .foot-bot {
-  margin-top: 38px;
-  padding-top: 20px;
+  margin-top: 28px;
+  padding-top: 16px;
   border-top: 1px solid var(--line);
   display: flex;
   justify-content: space-between;
@@ -2672,8 +2672,8 @@ input.mini {
   }
   .hero {
     grid-template-columns: 1fr;
-    padding: 34px 0 44px;
-    gap: var(--sp-3xl);
+    padding: 24px 0 34px;
+    gap: var(--sp-2xl);
   }
   .hero-media {
     order: -1;
@@ -2691,6 +2691,9 @@ input.mini {
   .hero-cta,
   .hero-stats {
     justify-content: center;
+  }
+  .hero-stats {
+    gap: var(--sp-lg);
   }
   .pdp,
   .co,
@@ -2766,14 +2769,17 @@ input.mini {
   /* HERO — image capped so copy is visible without scrolling */
   .hero {
     grid-template-columns: 1fr;
-    padding: 11px 0 17px;
-    gap: var(--sp-3xl);
+    padding: 10px 0 14px;
+    gap: var(--sp-2xl);
   }
   .hero-media {
     order: -1;
     max-width: none;
     margin: 0;
     width: 100%;
+  }
+  .hero-media .frame {
+    padding: 4px;
   }
   .hero-copy {
     text-align: left;
@@ -2791,19 +2797,19 @@ input.mini {
   }
   .hero-media img {
     height: auto;
-    aspect-ratio: 4/3;
+    aspect-ratio: 16/11;
     object-fit: cover;
     object-position: center 20%;
     border-radius: var(--r-md);
   }
   .hero-copy h1 {
-    font-size: clamp(32px, 9.2vw, 40px);
-    margin: 10px 0 12px;
-    line-height: 1.06;
+    font-size: clamp(30px, 8vw, 38px);
+    margin: 8px 0 10px;
+    line-height: 1.08;
   }
   .hero-copy p.lede {
     font-size: var(--fs-lg);
-    line-height: 1.6;
+    line-height: 1.55;
     margin-bottom: var(--sp-2xl);
   }
   .hero-cta {
@@ -2814,8 +2820,8 @@ input.mini {
     padding: 15px 18px;
   }
   .hero-stats {
-    margin-top: var(--sp-3xl);
-    padding-top: 18px;
+    margin-top: var(--sp-2xl);
+    padding-top: 14px;
     gap: var(--sp-xs);
     justify-content: space-between;
   }
@@ -2825,7 +2831,7 @@ input.mini {
     text-align: center;
   }
   .hero-stats b {
-    font-size: var(--fs-5xl);
+    font-size: clamp(20px, 5.5vw, 24px);
   }
   .hero-stats span {
     font-size: var(--fs-3xs);
@@ -2900,25 +2906,49 @@ input.mini {
   }
   /* PRODUCT GRID — always 2 across */
   .grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 22px 11px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 8px;
+    align-items: start;
+  }
+  .card {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .card-img {
+    aspect-ratio: 1 / 1.02 !important;
+    height: 168px !important;
+    max-height: 168px;
   }
   .card-body {
-    padding: 11px 1px 0;
+    padding: 6px 1px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
   }
   .card-body h3 {
-    font-size: var(--fs-xl);
-    line-height: 1.22;
+    font-size: var(--fs-lg);
+    line-height: 1.08;
+    margin: 0;
+    min-height: 1.6em;
   }
   .card-body .tl {
-    font-size: var(--fs-sm);
-    -webkit-line-clamp: 2;
-    margin-bottom: var(--sp-xs);
-    min-height: 2.5em;
+    font-size: var(--fs-xs);
+    -webkit-line-clamp: 1;
+    margin-bottom: 1px;
+    min-height: .95em;
   }
   .price {
-    font-size: var(--fs-lg);
+    font-size: var(--fs-md);
     gap: var(--sp-xs);
+  }
+  .card-add {
+    width: 100%;
+    padding: 7px 8px;
+    font-size: var(--fs-2xs);
+    letter-spacing: .08em;
+    margin-top: 1px;
+    min-height: 34px;
   }
   .price s {
     font-size: var(--fs-sm);
