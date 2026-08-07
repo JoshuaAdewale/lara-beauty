@@ -11,17 +11,17 @@ const SEED_PRODUCTS = [
     id: 'skin-glow-oil',
     name: 'Skin Glow Oil',
     tagline: 'Enhances skin tone, moisturises and glows',
-    cat: 'skin', price: 18500, compare: 22000, rating: 4.9, badge: 'Bestseller',
+    cat: 'skin', price: 15000, compare: 18500, rating: 4.9, badge: 'Bestseller',
+    priceGBP: 10, compareGBP: 12, currency: '₦ / £',
     stock: 64, sku: 'LBA-SGO-100',
     tone: ['All skin tones', 'Dry & dull skin', 'All ages'],
     images: ['assets/skin-oil.jpg', 'assets/bag.jpg', 'assets/black-soap.jpg'],
     variants: [
-      { label: '50ml',  price: 12000, stock: 22 },
-      { label: '100ml', price: 18500, stock: 30 },
-      { label: '120ml', price: 21500, stock: 12 }
+      { label: '100ml', price: 15000, priceGBP: 10, stock: 30 },
+      { label: '120ml', price: 18500, priceGBP: 12, stock: 12 }
     ],
-    desc: 'Our signature featherlight body and face oil. A blend of cold-pressed carrier oils that evens skin tone, locks in moisture and leaves a lit-from-within glow — never greasy, never sticky.',
-    details: ['Available in 50ml · 100ml · 120ml', 'Pump dispenser, travel safe', 'Enhances and evens skin tone', 'Non-comedogenic · fragrance light'],
+    desc: 'Made with Carrot Oil, Almond Oil, Avocado Oil, Sunflower Oil, Tea Tree Extract, Vitamin E & natural glow-boosting extracts. Our signature featherlight body and face oil that locks in moisture, supports a smooth complexion, and delivers lightweight nourishment with zero harsh additives. Never greasy, never sticky.',
+    details: ['Made with natural oils & vitamin E', 'Carrot Oil · Almond Oil · Avocado Oil · Sunflower Oil', 'Locks in moisture & prevents dryness', 'Supports smooth, even complexion', 'Lightweight & non-comedogenic', 'No harsh additives · fragrance light'],
     how: 'Pump 3–4 drops into palms and press into clean, slightly damp skin morning and night. For body, apply immediately after showering.',
     reviews: [
       { n: 'Amaka O.', r: 5, t: 'My skin drinks this up', b: 'Two weeks in and the dry patches around my nose are completely gone. Absorbs fast, no shine.', d: 'Jun 2026', v: true, ok: true },
@@ -33,13 +33,14 @@ const SEED_PRODUCTS = [
     id: 'black-soap',
     name: 'Natural Fairness Black Soap',
     tagline: 'Skin balancing and detoxifying · 250ml',
-    cat: 'cleanse', price: 9500, compare: null, rating: 4.8, badge: 'Heritage',
+    cat: 'cleanse', price: 15000, compare: null, rating: 4.8, badge: 'Heritage',
+    priceGBP: 20, currency: '₦ / £',
     stock: 48, sku: 'LBA-NBS-250',
     tone: ['Oily skin', 'Acne-prone', 'Uneven tone'],
     images: ['assets/black-soap.jpg', 'assets/bag.jpg'],
-    variants: [{ label: '250ml jar', price: 9500, stock: 48 }],
-    desc: 'Traditionally made whipped black soap with plantain ash, lime and natural botanicals. Deeply clarifying and detoxifying while balancing the skin — lifts oil, sweat and buildup without stripping your barrier.',
-    details: ['250ml jar with spatula', 'Plantain ash · lime · shea', 'Skin balancing & detoxifying', 'Face, body and scalp'],
+    variants: [{ label: '250ml jar', price: 15000, priceGBP: 20, stock: 48 }],
+    desc: 'Made with Cocoa Pod Ash, Shea Butter, Coconut Oil, Palm Kernel Oil, Honey, Aloe Vera & Essential Herbs. Traditionally made whipped black soap that deeply cleanses and exfoliates while balancing the skin. Lifts oil, sweat and buildup without stripping your barrier. Perfect for achieving a clearer complexion and maintaining balanced, fresh skin.',
+    details: ['Made with natural botanicals & shea', 'Cocoa Pod Ash · Shea Butter · Coconut Oil · Palm Kernel Oil', 'Deep cleansing & exfoliation', 'Soothes irritated skin', 'Promotes clearer complexion', 'Balanced freshness · Face, body and scalp'],
     how: 'Scoop a small amount, lather between wet hands and massage over face or body for 30 seconds. Rinse with lukewarm water. Start twice weekly.',
     reviews: [
       { n: 'Tolu A.', r: 5, t: 'Cleared my back acne', b: 'One month of using this in the shower and my back is smooth. Twice a week is my sweet spot.', d: 'Jun 2026', v: true, ok: true },
@@ -50,13 +51,14 @@ const SEED_PRODUCTS = [
     id: 'pink-lips-balm',
     name: 'Pink Lips Balm',
     tagline: 'Revives naturally rosy, soft lips',
-    cat: 'lips', price: 6500, compare: 8000, rating: 4.9, badge: 'Cult favourite',
+    cat: 'lips', price: 8000, compare: 10000, rating: 4.9, badge: 'Cult favourite',
+    priceGBP: 5, compareGBP: 6, currency: '₦ / £',
     stock: 90, sku: 'LBA-PLB-15',
     tone: ['Pigmented lips', 'Dry lips', 'All ages'],
     images: ['assets/pink-lips.jpg', 'assets/lip-balm-red.jpg'],
-    variants: [{ label: '15g jar', price: 6500, stock: 90 }],
-    desc: 'A whipped butter balm with a soft rose tint and vitamin E. Gently lifts darkness caused by sun, smoking and dehydration while depositing the sheerest wash of pink. Best paired with our Pink Lips Scrub.',
-    details: ['15g jar', 'Buildable rose tint', 'Vitamin E · shea · kokum butter', 'Safe for daily wear'],
+    variants: [{ label: '15g jar', price: 8000, priceGBP: 5, stock: 90 }],
+    desc: 'A whipped butter balm with a soft rose tint and vitamin E. Gently lifts darkness caused by sun, smoking and dehydration while depositing the sheerest wash of pink. Revives natural lip color and delivers lasting softness and hydration.',
+    details: ['Made with shea & kokum butter', 'Vitamin E · natural rose tint', 'Deep hydration & softness', 'Lifts darkness & evens tone', 'Natural lip enhancement', 'Safe for daily wear'],
     how: 'Apply a thin layer over clean lips morning and night. Exfoliate weekly with the Pink Lips Scrub for faster results.',
     reviews: [
       { n: 'Chidinma U.', r: 5, t: 'My lips look like me again', b: 'Years of dark lips from the sun. Six weeks with this and there is visible pink coming back.', d: 'Jul 2026', v: true, ok: true },
@@ -68,13 +70,14 @@ const SEED_PRODUCTS = [
     id: 'pink-lips-scrub',
     name: 'Pink Lips Scrub',
     tagline: 'Sugar polish that buffs away dullness',
-    cat: 'lips', price: 5500, compare: null, rating: 4.8, badge: null,
+    cat: 'lips', price: 5000, compare: null, rating: 4.8, badge: null,
+    priceGBP: 3, currency: '₦ / £',
     stock: 72, sku: 'LBA-PLS-15',
     tone: ['Flaky lips', 'Dark lips', 'All ages'],
     images: ['assets/pink-lips.jpg', 'assets/lip-balm-red.jpg'],
-    variants: [{ label: '15g jar', price: 5500, stock: 72 }],
-    desc: 'Fine sugar crystals suspended in nourishing oils. Sweeps away dead, flaky skin so your balm can actually work — and leaves lips instantly softer and pinker.',
-    details: ['15g jar', 'Edible, food-grade sugar', 'Use 1–2 times weekly', 'Pairs with Pink Lips Balm'],
+    variants: [{ label: '15g jar', price: 5000, priceGBP: 3, stock: 72 }],
+    desc: 'Fine sugar crystals suspended in nourishing oils. Sweeps away dead, flaky skin so your balm can actually work. Delivers deep hydration while buffing lips to natural softness and a healthy pink tone.',
+    details: ['Made with natural oils & sugar', 'Food-grade edible sugar crystals', 'Gentle exfoliation & hydration', 'Use 1–2 times weekly', 'Pairs perfectly with Pink Lips Balm'],
     how: 'Massage a pea-sized amount over damp lips in small circles for 30 seconds. Wipe away and follow with Pink Lips Balm.',
     reviews: [
       { n: 'Ngozi C.', r: 5, t: 'Instant difference', b: 'My lips were peeling from harmattan. One scrub and they were smooth again.', d: 'Jul 2026', v: true, ok: true },
@@ -85,13 +88,14 @@ const SEED_PRODUCTS = [
     id: 'lip-balm-tube',
     name: 'Lip Balm — Rose Tint',
     tagline: 'High-shine conditioning balm · 7ml',
-    cat: 'lips', price: 6000, compare: null, rating: 4.8, badge: null,
+    cat: 'lips', price: 5000, compare: null, rating: 4.8, badge: null,
+    priceGBP: 3, currency: '₦ / £',
     stock: 85, sku: 'LBA-LBT-07',
     tone: ['All lip tones', 'Dry lips', 'All ages'],
     images: ['assets/lip-balm-red.jpg', 'assets/lip-gloss.jpg'],
-    variants: [{ label: '7ml wand', price: 6000, stock: 85 }],
-    desc: 'A cushioned, rose-tinted balm in a slim doe-foot tube. Conditions like a treatment, wears like a gloss, and slips into any handbag.',
-    details: ['7ml doe-foot applicator', 'Sheer rose tint', 'Non-sticky finish', 'Wear alone or over lipstick'],
+    variants: [{ label: '7ml wand', price: 5000, priceGBP: 3, stock: 85 }],
+    desc: 'A cushioned, rose-tinted balm in a slim doe-foot tube. Conditions like a treatment, wears like a gloss with natural enhancement, and slips into any handbag. Delivers lasting hydration while enhancing natural lip softness.',
+    details: ['Made with nourishing butters', 'Sheer rose tint · natural enhancement', 'Non-sticky finish', 'Doe-foot applicator', 'Wear alone or over lipstick'],
     how: 'Sweep across bare or made-up lips. Reapply through the day as needed.',
     reviews: [
       { n: 'Nneka D.', r: 5, t: 'Zero stickiness', b: 'My hair does not glue to my mouth in Lagos wind. That alone earns five stars.', d: 'Jul 2026', v: true, ok: true },
@@ -102,16 +106,17 @@ const SEED_PRODUCTS = [
     id: 'lip-balm-stick',
     name: 'Lip Balm Sticks',
     tagline: 'Protect + Smooth · Rejuvenate + Nourish',
-    cat: 'lips', price: 4500, compare: null, rating: 4.7, badge: 'Two shades',
+    cat: 'lips', price: 5000, compare: null, rating: 4.7, badge: 'Two shades',
+    priceGBP: 3, currency: '₦ / £',
     stock: 110, sku: 'LBA-LBS-45',
     tone: ['Very dry lips', 'Sensitive', 'All ages'],
     images: ['assets/lip-balm-sticks.jpg', 'assets/lip-balm-red.jpg'],
     variants: [
-      { label: 'Protect + Smooth', price: 4500, stock: 55 },
-      { label: 'Rejuvenate + Nourish', price: 4500, stock: 55 }
+      { label: 'Protect + Smooth', price: 5000, priceGBP: 3, stock: 55 },
+      { label: 'Rejuvenate + Nourish', price: 5000, priceGBP: 3, stock: 55 }
     ],
-    desc: 'Classic twist-up balm sticks in two formulas. Protect + Smooth shields against sun and dry wind; Rejuvenate + Nourish repairs cracked, tired lips overnight.',
-    details: ['4.5g twist-up stick', 'Two formulas available', 'Pocket and handbag friendly', 'Pregnancy safe'],
+    desc: 'Classic twist-up balm sticks in two formulas for natural lip care. Protect + Smooth shields against sun and dry wind; Rejuvenate + Nourish repairs cracked, tired lips overnight. Both deliver deep hydration and softness.',
+    details: ['Made with natural butters & oils', '4.5g twist-up stick', 'Two formulas available', 'Deep hydration & softness', 'Pocket and handbag friendly', 'Pregnancy safe'],
     how: 'Glide over lips as often as needed. Keep one in your bag and one by the bed.',
     reviews: [
       { n: 'Funke R.', r: 5, t: 'Survived harmattan', b: 'The only balm that held up in December. My children use it too.', d: 'Feb 2026', v: true, ok: true },
@@ -122,13 +127,14 @@ const SEED_PRODUCTS = [
     id: 'lip-gloss',
     name: 'Lip Gloss — Crystal Strawberry',
     tagline: 'Glass-clear high shine · 7ml',
-    cat: 'lips', price: 7500, compare: 9000, rating: 4.7, badge: 'New',
+    cat: 'lips', price: 8000, compare: 10000, rating: 4.7, badge: 'New',
+    priceGBP: 5, compareGBP: 6, currency: '₦ / £',
     stock: 68, sku: 'LBA-LGL-07',
     tone: ['All lip tones', 'All ages'],
     images: ['assets/lip-gloss.jpg', 'assets/lip-balm-red.jpg'],
-    variants: [{ label: '7ml wand', price: 7500, stock: 68 }],
-    desc: 'Crystal-clear, weightless shine with a soft strawberry scent. Layer it over any lipstick or wear it bare for that wet-glass finish.',
-    details: ['7ml doe-foot applicator', 'Clear, universally flattering', 'Light strawberry scent', 'Non-sticky formula'],
+    variants: [{ label: '7ml wand', price: 8000, priceGBP: 5, stock: 68 }],
+    desc: 'Crystal-clear, weightless shine with a soft strawberry scent. Layer it over any lipstick or wear it bare for that wet-glass finish. Delivers beautiful high-shine enhancement while keeping lips hydrated and soft.',
+    details: ['Made with natural oils', '7ml doe-foot applicator', 'Crystal-clear & universally flattering', 'Light strawberry scent', 'Non-sticky formula', 'Natural lip enhancement'],
     how: 'Sweep across lips. Layer for a wetter, glassier finish.',
     reviews: [
       { n: 'Temi A.', r: 5, t: 'Glass lips', b: 'Genuinely does not feel tacky. The strawberry scent is subtle and lovely.', d: 'Jul 2026', v: true, ok: true },
@@ -139,13 +145,14 @@ const SEED_PRODUCTS = [
     id: 'glow-ritual-set',
     name: 'The Glow Ritual Set',
     tagline: 'Glow Oil + Black Soap, boxed in gold',
-    cat: 'sets', price: 25500, compare: 28000, rating: 5.0, badge: 'Save ₦2,500',
+    cat: 'sets', price: 23000, compare: 25500, rating: 5.0, badge: 'Save ₦2,500',
+    priceGBP: 15, compareGBP: 18, currency: '₦ / £',
     stock: 25, sku: 'LBA-SET-GLW',
     tone: ['Gifting', 'All ages'],
     images: ['assets/bag.jpg', 'assets/skin-oil.jpg', 'assets/black-soap.jpg'],
-    variants: [{ label: 'Gift box', price: 25500, stock: 25 }],
-    desc: 'Cleanse then glow. Our Natural Fairness Black Soap and 100ml Skin Glow Oil presented in the signature black and gold Lara Beauty Atelier gift bag with a handwritten card.',
-    details: ['Skin Glow Oil 100ml', 'Natural Fairness Black Soap 250ml', 'Black & gold gift bag + card', 'Free gift wrapping'],
+    variants: [{ label: 'Gift box', price: 23000, priceGBP: 15, stock: 25 }],
+    desc: 'Cleanse then glow. Our Natural Fairness Black Soap and 100ml Skin Glow Oil presented in the signature black and gold Lara Beauty Atelier gift bag with a handwritten card. Perfect for gifting to someone special.',
+    details: ['Skin Glow Oil 100ml', 'Natural Fairness Black Soap 250ml', 'Black & gold gift bag + card', 'Free gift wrapping', 'Complete skin ritual'],
     how: 'Cleanse with the black soap, then press 3 drops of Skin Glow Oil into damp skin. Morning and night.',
     reviews: [
       { n: 'Yemi A.', r: 5, t: 'Gifted to my mum', b: 'The packaging made her cry. She has been using it religiously since.', d: 'Jul 2026', v: true, ok: true },
@@ -156,13 +163,14 @@ const SEED_PRODUCTS = [
     id: 'pout-set',
     name: 'Perfect Pout Set',
     tagline: 'Scrub + Balm + Gloss, the full lip ritual',
-    cat: 'sets', price: 17500, compare: 19500, rating: 4.9, badge: 'Save ₦2,000',
+    cat: 'sets', price: 21000, compare: 23000, rating: 4.9, badge: 'Save ₦2,000',
+    priceGBP: 14, compareGBP: 16, currency: '₦ / £',
     stock: 30, sku: 'LBA-SET-PPT',
     tone: ['Gifting', 'All ages'],
     images: ['assets/pink-lips.jpg', 'assets/lip-gloss.jpg', 'assets/bag.jpg'],
-    variants: [{ label: 'Gift box', price: 17500, stock: 30 }],
-    desc: 'Buff, treat, shine. Pink Lips Scrub, Pink Lips Balm and our Crystal Strawberry Lip Gloss together in a black and gold pouch — our most-gifted lip trio.',
-    details: ['Pink Lips Scrub 15g', 'Pink Lips Balm 15g', 'Lip Gloss 7ml', 'Black & gold travel pouch'],
+    variants: [{ label: 'Gift box', price: 21000, priceGBP: 14, stock: 30 }],
+    desc: 'Buff, treat, shine. Pink Lips Scrub, Pink Lips Balm and our Crystal Strawberry Lip Gloss together in a black and gold pouch. The complete lip care ritual for hydrated, soft, naturally beautiful lips.',
+    details: ['Pink Lips Scrub 15g', 'Pink Lips Balm 15g', 'Lip Gloss 7ml', 'Black & gold travel pouch', 'Complete lip ritual kit'],
     how: 'Scrub twice weekly, balm nightly, gloss by day.',
     reviews: [
       { n: 'Maryam I.', r: 5, t: 'My handbag trio', b: 'I bought three sets — one for me, two for my sisters.', d: 'Jul 2026', v: true, ok: true }
@@ -223,8 +231,12 @@ const SEED_SETTINGS = {
   freeShip: 25000,
   shipFee: 2500,
   currency: '₦',
+  currencies: { ngn: '₦', gbp: '£' },
   announce: 'Free delivery on orders over ₦25,000 · Nationwide · Pay on delivery available',
-  lowStock: 20
+  lowStock: 20,
+  global: true,
+  storeType: 'Online store',
+  targetAudience: 'Global customers'
 };
 
 /* ---------- Site content (fully editable from admin → Pages) ---------- */
@@ -257,11 +269,13 @@ const SEED_CONTENT = {
   },
   best: { eyebrow: 'Loved by thousands', title: 'Bestsellers', cta: 'View all products', limit: 4 },
   story: {
-    eyebrow: 'Our story', title: 'Started in a kitchen in Abuja',
+    eyebrow: 'Our story', title: 'Beauty with purpose, crafted with care',
     image: 'assets/story-flatlay.jpg',
     body: [
-      'Lara made her first batch of glow oil for her mother, whose skin had turned dry and dull after years of harsh soaps. Friends asked. Then friends of friends. Then a queue formed outside the gate.',
-      'Six years later we still make everything in small batches, still source shea from the same women\u2019s co-operative in Kwara, and still wrap every order in the black and gold bag by hand. What changed is how many of you are in the queue.'
+      'Lara Beauty Atelier was born from a simple act of love. In 2020, Lara created her first batch of Skin Glow Oil for her mother, whose skin had turned dry and dull after years of harsh soaps and environmental stress. Within weeks, her mother\u2019s skin transformed. Friends noticed. Then colleagues. Then a waiting list formed outside the gate in Abuja.',
+      'Today, we remain exactly what we started: a small-batch, handmade beauty house dedicated to creating formulas that truly work. Every product is crafted with natural, cold-pressed oils and botanicals sourced directly from women-led cooperatives across Nigeria and West Africa. We believe that beauty should nourish rather than harm, enhance rather than mask, and last a lifetime rather than a season.',
+      'Our global reach spans from Lagos to London, from customers in their twenties to women in their seventies. Each person who trusts us with their skin becomes part of our story. That trust is sacred. That\u2019s why we test every formula on multiple skin tones, every age group, and every climate condition. That\u2019s why we offer a 30-day promise with no questions asked. That\u2019s why we wrap every order by hand in our signature black and gold bag.',
+      'This is not just skincare. This is a ritual. This is trust. This is Lara Beauty Atelier.'
     ],
     cta: 'Shop our range', ctaLink: '#/shop'
   },
@@ -278,7 +292,7 @@ const SEED_CONTENT = {
     success: 'You\u2019re on the list — check your inbox for 10% off'
   },
   footer: {
-    blurb: 'Small-batch skin glow oil, black soap and lip care, handmade in Abuja since 2020.',
+    blurb: 'Small-batch natural skincare and lip care, handmade in Abuja and trusted by customers worldwide. For every shade, every age, and every climate.',
     shopTitle: 'Shop', helpTitle: 'Help', contactTitle: 'Contact',
     help: ['Track my order','Delivery & returns','Ingredient glossary','Contact us'],
     hours: 'Mon–Sat, 9am–6pm',
@@ -289,6 +303,6 @@ const SEED_CONTENT = {
   },
   seo: {
     title: 'Lara Beauty Atelier — Skin Glow Oil, Black Soap & Lip Care',
-    desc: 'Lara Beauty Atelier crafts small-batch Skin Glow Oil, Natural Fairness Black Soap, Pink Lips Balm and lip gloss for women of every age and shade. Free delivery over ₦25,000.'
+    desc: 'Lara Beauty Atelier crafts small-batch natural skincare and lip care in Abuja. Trusted by customers worldwide. Skin Glow Oil, Black Soap, Lip Balms & more. Prices in NGN and GBP. For every shade, every age, every climate.'
   }
 };

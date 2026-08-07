@@ -55,6 +55,14 @@ const saveCategories = () => DB.write(DB.k.g, CATEGORIES);
 const saveMedia      = () => DB.write(DB.k.m, MEDIA);
 
 const money = n => SETTINGS.currency + Math.round(n).toLocaleString('en-NG');
+
+/* Display both NGN and GBP prices */
+const moneyDual = (ngnPrice, gbpPrice) => {
+  const ngn = Math.round(ngnPrice).toLocaleString('en-NG');
+  const gbp = gbpPrice ? Math.round(gbpPrice).toLocaleString('en-GB') : '';
+  return gbp ? `₦${ngn} / £${gbp}` : `₦${ngn}`;
+};
+
 const P = id => PRODUCTS.find(p => p.id === id);
 const totalStock = p => p.variants && p.variants.length
   ? p.variants.reduce((s, v) => s + (+v.stock || 0), 0) : (+p.stock || 0);

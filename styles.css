@@ -1071,6 +1071,52 @@ select.sort {
   color: var(--gold);
 }
 
+/* Dual currency display for product pricing */
+.price-dual {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-md);
+  font-size: var(--fs-xl);
+  font-weight: 500;
+  color: var(--gold);
+}
+
+.price-currency {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.price-currency small {
+  font-size: var(--fs-sm);
+  color: var(--mut);
+  font-weight: 400;
+}
+
+.pdp-price-dual {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-lg);
+  flex-wrap: wrap;
+  font-size: clamp(24px, 3vw, 30px);
+  font-family: 'Cormorant Garamond', serif;
+  margin: 16px 0;
+  color: var(--gold);
+}
+
+.pdp-price-dual .currency-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pdp-price-dual .currency-group small {
+  font-family: 'Jost';
+  font-size: var(--fs-base);
+  color: var(--mut);
+  font-weight: 400;
+}
+
 .vlabel {
   font-size: var(--fs-sm);
   letter-spacing: .16em;
