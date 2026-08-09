@@ -304,7 +304,7 @@ button {
   font-weight: 500;
 }
 
-header {
+.site-header {
   position: sticky;
   top: 0;
   z-index: 60;
@@ -488,9 +488,9 @@ header.stuck {
   position: relative;
   display: grid;
   grid-template-columns: 1.02fr .98fr;
-  gap: clamp(28px, 5vw, 64px);
+  gap: clamp(18px, 2.8vw, 38px);
   align-items: center;
-  padding: clamp(40px, 7vw, 86px) 0 clamp(48px, 8vw, 96px);
+  padding: clamp(22px, 4vw, 56px) 0 clamp(28px, 5vw, 60px);
 }
 
 .hero::before {
@@ -508,8 +508,8 @@ header.stuck {
 }
 
 .hero-copy h1 {
-  font-size: clamp(42px, 7.4vw, 86px);
-  margin: 16px 0 20px;
+  font-size: clamp(34px, 5.6vw, 62px);
+  margin: 12px 0 14px;
   letter-spacing: -.02em;
 }
 
@@ -522,10 +522,10 @@ header.stuck {
 }
 
 .hero-copy p.lede {
-  font-size: clamp(15px, 1.6vw, 18px);
+  font-size: clamp(15px, 1.4vw, 16px);
   color: var(--mut);
-  max-width: 46ch;
-  margin-bottom: var(--sp-4xl);
+  max-width: 42ch;
+  margin-bottom: var(--sp-2xl);
 }
 
 .hero-cta {
@@ -536,9 +536,9 @@ header.stuck {
 
 .hero-stats {
   display: flex;
-  gap: clamp(18px, 3.4vw, 42px);
-  margin-top: clamp(28px, 4vw, 46px);
-  padding-top: 24px;
+  gap: clamp(12px, 2vw, 24px);
+  margin-top: clamp(20px, 2.6vw, 30px);
+  padding-top: 16px;
   border-top: 1px solid var(--line);
 }
 
@@ -571,7 +571,7 @@ header.stuck {
 .hero-media img {
   width: 100%;
   height: auto;
-  aspect-ratio: 4/5;
+  aspect-ratio: 3/4;
   object-fit: cover;
   border-radius: var(--r);
 }
@@ -654,13 +654,13 @@ header.stuck {
    9. SECTION HEADINGS
    -------------------------------------------------------------------------- */
 section {
-  padding: clamp(48px, 7vw, 92px) 0;
+  padding: clamp(28px, 4vw, 64px) 0;
 }
 
 .sec-head {
   text-align: center;
   max-width: 640px;
-  margin: 0 auto clamp(30px, 4vw, 52px);
+  margin: 0 auto clamp(22px, 3vw, 42px);
 }
 
 .sec-head h2 {
@@ -687,14 +687,14 @@ section {
 .cols {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--sp-2xl);
+  gap: clamp(12px, 1.5vw, 18px);
 }
 
 .col {
   position: relative;
   border-radius: var(--r);
   overflow: hidden;
-  aspect-ratio: 3/4;
+  aspect-ratio: 4/4.6;
   cursor: pointer;
   border: 1px solid var(--line);
 }
@@ -814,7 +814,7 @@ select.sort {
 .grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: clamp(14px, 2vw, 24px);
+  gap: clamp(10px, 1.4vw, 16px);
 }
 
 .card {
@@ -832,7 +832,7 @@ select.sort {
   border-radius: var(--r);
   overflow: hidden;
   background: var(--panel);
-  aspect-ratio: 1;
+  aspect-ratio: 1 / 1.02;
   border: 1px solid var(--line);
   transition: border-color .4s;
 }
@@ -906,7 +906,7 @@ select.sort {
 }
 
 .card-body {
-  padding: 15px 2px 0;
+  padding: 10px 2px 0;
 }
 
 .card-body h3 {
@@ -1069,6 +1069,52 @@ select.sort {
   padding: 5px 12px;
   border-radius: var(--r-pill);
   color: var(--gold);
+}
+
+/* Dual currency display for product pricing */
+.price-dual {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-md);
+  font-size: var(--fs-xl);
+  font-weight: 500;
+  color: var(--gold);
+}
+
+.price-currency {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.price-currency small {
+  font-size: var(--fs-sm);
+  color: var(--mut);
+  font-weight: 400;
+}
+
+.pdp-price-dual {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-lg);
+  flex-wrap: wrap;
+  font-size: clamp(24px, 3vw, 30px);
+  font-family: 'Cormorant Garamond', serif;
+  margin: 16px 0;
+  color: var(--gold);
+}
+
+.pdp-price-dual .currency-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pdp-price-dual .currency-group small {
+  font-family: 'Jost';
+  font-size: var(--fs-base);
+  color: var(--mut);
+  font-weight: 400;
 }
 
 .vlabel {
@@ -1430,7 +1476,7 @@ select.sort {
 .story {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: clamp(24px, 4vw, 60px);
+  gap: clamp(20px, 3vw, 44px);
   align-items: center;
 }
 
@@ -1438,12 +1484,16 @@ select.sort {
   border: 1px solid var(--gold);
   border-radius: calc(var(--r) + 5px);
   padding: var(--sp-sm);
+  width: 100%;
 }
 
 .story img {
+  width: 100%;
+  height: 100%;
   border-radius: var(--r);
-  aspect-ratio: 4/3;
+  aspect-ratio: 16 / 10;
   object-fit: cover;
+  display: block;
 }
 
 .story h2 {
@@ -1459,12 +1509,12 @@ select.sort {
 .vals {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: var(--sp-xl);
+  gap: clamp(12px, 1.8vw, 18px);
   text-align: center;
 }
 
 .val {
-  padding: 28px 18px;
+  padding: 22px 14px;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: var(--r);
@@ -1499,7 +1549,7 @@ select.sort {
   background: var(--panel);
   border: 1px solid var(--gold-d);
   border-radius: var(--r);
-  padding: clamp(34px, 5vw, 62px) clamp(20px, 4vw, 40px);
+  padding: clamp(22px, 3vw, 40px) clamp(14px, 2.6vw, 24px);
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -1561,7 +1611,7 @@ footer {
 .foot {
   display: grid;
   grid-template-columns: 1.7fr 1fr 1fr 1fr;
-  gap: clamp(22px, 3vw, 40px);
+  gap: clamp(14px, 2vw, 24px);
 }
 
 .foot h5 {
@@ -1598,8 +1648,8 @@ footer {
 }
 
 .foot-bot {
-  margin-top: 38px;
-  padding-top: 20px;
+  margin-top: 28px;
+  padding-top: 16px;
   border-top: 1px solid var(--line);
   display: flex;
   justify-content: space-between;
@@ -2672,8 +2722,8 @@ input.mini {
   }
   .hero {
     grid-template-columns: 1fr;
-    padding: 34px 0 44px;
-    gap: var(--sp-3xl);
+    padding: 24px 0 34px;
+    gap: var(--sp-2xl);
   }
   .hero-media {
     order: -1;
@@ -2691,6 +2741,9 @@ input.mini {
   .hero-cta,
   .hero-stats {
     justify-content: center;
+  }
+  .hero-stats {
+    gap: var(--sp-lg);
   }
   .pdp,
   .co,
@@ -2766,14 +2819,17 @@ input.mini {
   /* HERO — image capped so copy is visible without scrolling */
   .hero {
     grid-template-columns: 1fr;
-    padding: 22px 0 34px;
-    gap: var(--sp-3xl);
+    padding: 8px 0 12px;
+    gap: 14px;
   }
   .hero-media {
     order: -1;
-    max-width: none;
-    margin: 0;
+    max-width: 360px;
+    margin: 0 auto;
     width: 100%;
+  }
+  .hero-media .frame {
+    padding: 4px;
   }
   .hero-copy {
     text-align: left;
@@ -2786,24 +2842,24 @@ input.mini {
     justify-content: stretch;
   }
   .hero-media .frame {
-    padding: var(--sp-2xs);
+    padding: 4px;
     border-radius: 14px;
   }
   .hero-media img {
-    height: auto;
-    aspect-ratio: 4/3;
+    height: 232px;
+    aspect-ratio: auto;
     object-fit: cover;
     object-position: center 20%;
     border-radius: var(--r-md);
   }
   .hero-copy h1 {
-    font-size: clamp(32px, 9.2vw, 40px);
-    margin: 10px 0 12px;
-    line-height: 1.06;
+    font-size: clamp(30px, 8vw, 38px);
+    margin: 8px 0 10px;
+    line-height: 1.08;
   }
   .hero-copy p.lede {
     font-size: var(--fs-lg);
-    line-height: 1.6;
+    line-height: 1.55;
     margin-bottom: var(--sp-2xl);
   }
   .hero-cta {
@@ -2814,8 +2870,8 @@ input.mini {
     padding: 15px 18px;
   }
   .hero-stats {
-    margin-top: var(--sp-3xl);
-    padding-top: 18px;
+    margin-top: var(--sp-2xl);
+    padding-top: 14px;
     gap: var(--sp-xs);
     justify-content: space-between;
   }
@@ -2825,7 +2881,7 @@ input.mini {
     text-align: center;
   }
   .hero-stats b {
-    font-size: var(--fs-5xl);
+    font-size: clamp(20px, 5.5vw, 24px);
   }
   .hero-stats span {
     font-size: var(--fs-3xs);
@@ -2835,11 +2891,7 @@ input.mini {
     word-break: break-word;
   }
   .float-card {
-    position: static;
-    margin: 10px 0 0;
-    max-width: none;
-    animation: none;
-    padding: 10px 12px;
+    display: none;
   }
   .float-card img {
     width: 38px;
@@ -2900,25 +2952,49 @@ input.mini {
   }
   /* PRODUCT GRID — always 2 across */
   .grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 22px 11px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 8px;
+    align-items: start;
+  }
+  .card {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .card-img {
+    aspect-ratio: 1 / 1.02 !important;
+    height: 168px !important;
+    max-height: 168px;
   }
   .card-body {
-    padding: 11px 1px 0;
+    padding: 6px 1px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
   }
   .card-body h3 {
-    font-size: var(--fs-xl);
-    line-height: 1.22;
+    font-size: var(--fs-lg);
+    line-height: 1.08;
+    margin: 0;
+    min-height: 1.6em;
   }
   .card-body .tl {
-    font-size: var(--fs-sm);
-    -webkit-line-clamp: 2;
-    margin-bottom: var(--sp-xs);
-    min-height: 2.5em;
+    font-size: var(--fs-xs);
+    -webkit-line-clamp: 1;
+    margin-bottom: 1px;
+    min-height: .95em;
   }
   .price {
-    font-size: var(--fs-lg);
+    font-size: var(--fs-md);
     gap: var(--sp-xs);
+  }
+  .card-add {
+    width: 100%;
+    padding: 7px 8px;
+    font-size: var(--fs-2xs);
+    letter-spacing: .08em;
+    margin-top: 1px;
+    min-height: 34px;
   }
   .price s {
     font-size: var(--fs-sm);
@@ -3092,6 +3168,14 @@ input.mini {
   }
   .story .imgwrap {
     padding: var(--sp-2xs);
+    max-width: 520px;
+    margin: 0 auto;
+  }
+  .story img {
+    width: 100% !important;
+    height: 220px !important;
+    aspect-ratio: 16 / 10 !important;
+    object-fit: cover !important;
   }
   .vals {
     grid-template-columns: 1fr 1fr;
@@ -4081,431 +4165,7 @@ input.mini {
 }
 
 /* -----------------------------------------------------------------------------
-   30. SPACING CORRECTIONS
-   Removes dead vertical space and tightens CTA / button rhythm.
-   Measured in-browser rather than guessed; see notes against each rule.
-   -------------------------------------------------------------------------- */
-
-/* The hero is a two-column grid where the image column is much taller than the
-   copy. `align-items:center` left 271px of dead space under the stats on
-   desktop and 78px on mobile.
-   Centring the copy block as a whole keeps the text optically aligned with the
-   portrait while removing the trailing void. */
-.hero {
-  align-items: center;
-}
-
-.hero-copy {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.hero-stats {
-  margin-top: clamp(24px, 3vw, 36px);
-  padding-top: var(--sp-3xl);
-}
-
-/* Cap the portrait so the media column can't tower over the copy and force a
-   void beneath it. 4/5 is kept as the intrinsic ratio; the cap only bites on
-   wide screens where the column would otherwise run to ~705px. */
-@media (min-width: 921px) {
-  .hero-media .frame {
-    max-height: 620px;
-  }
-
-  .hero-media img {
-    max-height: 600px;
-    object-fit: cover;
-    object-position: center 18%;
-  }
-}
-
-/* Hero section padding was doubling up with the hero's own padding. */
-.hero-section {
-  padding-block: 0;
-}
-
-/* CTA row: buttons sat with an uneven 8px gutter on mobile and wrapped
-   awkwardly. Equal widths and a consistent gap at every size. */
-.hero-cta {
-  gap: var(--sp-md);
-  margin-top: var(--sp-2xl);
-}
-
-.hero-cta .btn {
-  min-height: 52px;
-}
-
-/* Product card: price -> button gap was only 10px, and the tagline could
-   collapse leaving ragged card feet. */
-.card-body {
-  display: flex;
-  flex-direction: column;
-  padding: var(--sp-lg) 0 0;
-}
-
-.card-body .tl {
-  margin-bottom: var(--sp-sm);
-}
-
-.card-body .price {
-  margin-bottom: auto;
-}
-
-.card-add {
-  margin-top: var(--sp-lg);
-  min-height: 46px;
-}
-
-/* Consistent tap targets — anything interactive clears 44px on touch. */
-.icon-btn {
-  width: 44px;
-  height: 44px;
-}
-
-.chip {
-  min-height: 40px;
-  display: inline-flex;
-  align-items: center;
-}
-
-.vopt {
-  min-height: 44px;
-}
-
-.rate-pick button {
-  min-width: 40px;
-  min-height: 40px;
-}
-
-.btn-sm {
-  min-height: 40px;
-}
-
-/* Section rhythm: the first section after the marquee doubled its top padding
-   against the marquee's own border. */
-.marquee + section {
-  padding-top: clamp(36px, 5vw, 72px);
-}
-
-/* Listing header: filter chips sat too close to the sort row. */
-.shop-intro {
-  margin-bottom: var(--sp-3xl);
-}
-
-/* Collection chips scroll horizontally rather than spilling past the viewport. */
-.filters {
-  margin-bottom: var(--sp-xl);
-  display: flex;
-  gap: var(--sp-sm);
-  overflow-x: auto;
-  flex-wrap: nowrap;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: var(--sp-2xs);
-  scroll-snap-type: x proximity;
-}
-
-.filters::-webkit-scrollbar { display: none; }
-
-.filters .chip {
-  flex: 0 0 auto;
-  scroll-snap-align: start;
-}
-
-.shop-top {
-  margin-bottom: var(--sp-3xl);
-}
-
-/* Prose pages had a large gap before the newsletter block. */
-.prose {
-  padding-bottom: clamp(40px, 6vw, 64px);
-}
-
-@media (max-width: 640px) {
-  /* Mobile hero: copy leads, image follows, no centring gap. */
-  .hero {
-    align-items: start;
-    gap: var(--sp-2xl);
-  }
-
-  .hero-copy {
-    display: block;
-  }
-
-  .hero-stats {
-    margin-top: var(--sp-3xl);
-    padding-top: var(--sp-xl);
-  }
-
-  /* Full-width stacked CTAs with an even gutter. */
-  .hero-cta {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--sp-md);
-    margin-top: var(--sp-xl);
-  }
-
-  .hero-cta .btn {
-    width: 100%;
-    margin: 0;
-  }
-
-  /* Tighten the card grid so two columns breathe evenly. */
-  .grid {
-    gap: var(--sp-3xl) var(--sp-lg);
-  }
-
-  .card-body {
-    padding-top: var(--sp-md);
-  }
-
-  .card-add {
-    margin-top: var(--sp-md);
-  }
-
-  /* Buy row on the product page. */
-  .buy {
-    gap: var(--sp-md);
-    margin: var(--sp-xl) 0 var(--sp-md);
-  }
-
-  .buy .btn,
-  .buy .qty {
-    min-height: 52px;
-  }
-
-  .pdp {
-    gap: var(--sp-3xl);
-  }
-
-  /* Contact and cart columns. */
-  .contact-grid,
-  .cart-layout {
-    gap: var(--sp-3xl);
-  }
-
-  .done-actions {
-    display: grid;
-    gap: var(--sp-md);
-  }
-
-  .done-actions .btn {
-    width: 100%;
-  }
-}
-
-/* -----------------------------------------------------------------------------
-   31. LISTING & CARD CORRECTIONS
-   -------------------------------------------------------------------------- */
-
-/* The card image is an <a>; make it a block so the ratio box applies. */
-/* Product photography is packaging on a backdrop — `cover` was cropping the
-   tops and bottoms off bottles. `contain` shows the whole product, with the
-   panel colour filling the letterbox. */
-.card-img img {
-  object-fit: contain;
-  background: var(--panel);
-}
-
-/* Collection banners and the hero remain edge-to-edge crops. */
-.col img,
-.hero-media img,
-.gal-main img,
-.story img {
-  object-fit: cover;
-}
-
-/* Result count and sort belong on one line, not stacked with a void between. */
-.shop-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-lg);
-  flex-wrap: wrap;
-  margin-bottom: var(--sp-3xl);
-}
-
-.shop-top #result-count {
-  margin: 0;
-}
-
-.sortbar {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-md);
-}
-
-@media (max-width: 640px) {
-  /* Keep count + sort side by side; the select shrinks rather than wraps. */
-  .shop-top {
-    flex-wrap: nowrap;
-    gap: var(--sp-md);
-    margin-bottom: var(--sp-2xl);
-  }
-
-  .sortbar {
-    flex: 0 1 auto;
-    min-width: 0;
-  }
-
-  select.sort {
-    max-width: 160px;
-    text-overflow: ellipsis;
-  }
-
-  .shop-intro {
-    margin-bottom: var(--sp-2xl);
-  }
-
-  .filters {
-    margin-bottom: var(--sp-lg);
-  }
-
-  /* Breadcrumb sat too far from the heading. */
-  .crumb {
-    padding: var(--sp-lg) 0 var(--sp-md);
-  }
-}
-
-/* Result count must not wrap onto two lines beside the sort control. */
-#result-count {
-  white-space: nowrap;
-  flex: 0 0 auto;
-}
-
-/* -----------------------------------------------------------------------------
-   32. CURRENCY SWITCHER
-   -------------------------------------------------------------------------- */
-.cur-switch {
-  appearance: none;
-  border: 1px solid var(--line);
-  background: var(--panel);
-  color: var(--cream);
-  border-radius: var(--r-pill);
-  padding: 0 var(--sp-lg);
-  height: 38px;
-  font-size: var(--fs-sm);
-  letter-spacing: .08em;
-  cursor: pointer;
-  transition: border-color .25s, color .25s;
-  margin-right: var(--sp-xs);
-}
-
-.cur-switch:hover,
-.cur-switch:focus {
-  border-color: var(--gold);
-  color: var(--gold);
-  outline: none;
-}
-
-/* -----------------------------------------------------------------------------
-   33. ABOUT US SECTION
-   -------------------------------------------------------------------------- */
-.about-section {
-  background: var(--panel);
-  border-block: 1px solid var(--line);
-}
-
-.about-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--sp-xl);
-}
-
-.about-card {
-  background: var(--black);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-  padding: var(--sp-3xl) var(--sp-2xl);
-  transition: border-color .4s var(--ease), transform .4s var(--ease);
-}
-
-.about-card:hover {
-  border-color: var(--gold);
-  transform: translateY(-4px);
-}
-
-.about-card svg {
-  width: 28px;
-  height: 28px;
-  stroke: var(--gold);
-  fill: none;
-  stroke-width: 1.3;
-  margin-bottom: var(--sp-xl);
-}
-
-.about-card h3 {
-  font-size: var(--fs-5xl);
-  margin-bottom: var(--sp-sm);
-}
-
-.about-card p {
-  font-size: var(--fs-lg);
-  color: var(--mut);
-  line-height: 1.6;
-}
-
-.about-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--sp-xl);
-  margin-top: var(--sp-5xl);
-  padding-top: var(--sp-4xl);
-  border-top: 1px solid var(--line);
-  text-align: center;
-}
-
-.about-stats b {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(30px, 3.6vw, 42px);
-  display: block;
-  line-height: 1;
-  color: var(--gold);
-}
-
-.about-stats span {
-  font-size: var(--fs-sm);
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--mut);
-  display: block;
-  margin-top: var(--sp-sm);
-}
-
-@media (max-width: 920px) {
-  .about-grid { grid-template-columns: repeat(2, 1fr); }
-}
-
-@media (max-width: 640px) {
-  .about-grid {
-    grid-template-columns: 1fr;
-    gap: var(--sp-lg);
-  }
-  .about-card { padding: var(--sp-2xl) var(--sp-xl); }
-  .about-card svg { margin-bottom: var(--sp-lg); }
-  .about-stats {
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--sp-2xl) var(--sp-lg);
-    margin-top: var(--sp-4xl);
-    padding-top: var(--sp-3xl);
-  }
-  .cur-switch {
-    height: 40px;
-    padding: 0 var(--sp-md);
-    font-size: var(--fs-xs);
-  }
-}
-
-@media (max-width: 380px) {
-  .cur-switch { padding: 0 var(--sp-sm); }
-}
-
-/* -----------------------------------------------------------------------------
-   34. STATIC MULTI-PAGE STYLES
-   Used by the generated .html pages (build.js). Lives here so the single
-   source stylesheet serves both builds.
+   29. STATIC MULTI-PAGE ADDITIONS
    -------------------------------------------------------------------------- */
 .foot-title {
   font-family: 'Jost', sans-serif;
@@ -4519,10 +4179,9 @@ input.mini {
 
 .card-add {
   width: 100%;
-  margin-top: var(--sp-lg);
+  margin-top: var(--sp-md);
   padding: var(--sp-lg);
   font-size: var(--fs-xs);
-  min-height: 46px;
 }
 
 .card-body h3 a:hover { color: var(--gold); }
@@ -4535,64 +4194,24 @@ input.mini {
 
 .crumb span:last-child { color: var(--cream); }
 
-/* --- long-form content pages ------------------------------------------------ */
+/* Long-form content pages */
 .prose {
   max-width: 720px;
-  padding: var(--sp-3xl) 0 clamp(40px, 6vw, 64px);
+  padding: var(--sp-3xl) 0 80px;
 }
 
-.prose h1 {
-  font-size: clamp(30px, 4.6vw, 46px);
-  margin-bottom: var(--sp-3xl);
-}
-
-/* Explicit margins — utility classes elsewhere zero these out otherwise. */
-.prose h2 {
-  font-size: clamp(21px, 2.6vw, 28px);
-  margin-top: clamp(32px, 4vw, 48px);
-  margin-bottom: var(--sp-lg);
-  color: var(--gold);
-}
-
-.prose h3 {
-  font-size: var(--fs-4xl);
-  margin-top: var(--sp-3xl);
-  margin-bottom: var(--sp-sm);
-}
-
-.prose p {
-  color: var(--mut);
-  margin-bottom: var(--sp-xl);
-}
-
-.prose ul {
-  color: var(--mut);
-  padding-left: var(--sp-3xl);
-  margin-bottom: var(--sp-xl);
-}
-
+.prose h1 { font-size: clamp(30px, 4.6vw, 46px); margin-bottom: var(--sp-3xl); }
+.prose h2 { font-size: clamp(21px, 2.6vw, 28px); margin: var(--sp-5xl) 0 var(--sp-lg); color: var(--gold); }
+.prose h3 { font-size: var(--fs-4xl); margin: var(--sp-3xl) 0 var(--sp-sm); }
+.prose p { color: var(--mut); margin-bottom: var(--sp-xl); }
+.prose ul { color: var(--mut); padding-left: var(--sp-3xl); margin-bottom: var(--sp-xl); }
 .prose li { margin-bottom: var(--sp-sm); }
-
-.prose a {
-  color: var(--gold);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-/* --- policy tables ---------------------------------------------------------
-   Wide tables must scroll inside their own box; the page itself never
-   scrolls sideways (body has overflow-x:hidden, which would clip them).
-   -------------------------------------------------------------------------- */
-.table-scroll {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  margin-bottom: var(--sp-3xl);
-  border-radius: var(--r-md);
-}
+.prose a { color: var(--gold); text-decoration: underline; text-underline-offset: 3px; }
 
 .policy-table {
   width: 100%;
   border-collapse: collapse;
+  margin-bottom: var(--sp-3xl);
   font-size: var(--fs-lg);
 }
 
@@ -4601,7 +4220,6 @@ input.mini {
   text-align: left;
   padding: var(--sp-lg);
   border-bottom: 1px solid var(--line);
-  white-space: nowrap;
 }
 
 .policy-table th {
@@ -4612,9 +4230,8 @@ input.mini {
 }
 
 .policy-table td { color: var(--mut); }
-.policy-table td:first-child { white-space: normal; }
 
-/* --- cart page -------------------------------------------------------------- */
+/* Cart page */
 .cart-layout {
   display: grid;
   grid-template-columns: 1.4fr .6fr;
@@ -4652,10 +4269,6 @@ input.mini {
 }
 .rm:hover { color: var(--bad); }
 
-/* Checkout steps are an <ol> in the static build. */
-.steps { list-style: none; }
-.steps li { display: flex; align-items: center; }
-
 @media (max-width: 920px) {
   .cart-layout { grid-template-columns: 1fr; }
 }
@@ -4664,403 +4277,11 @@ input.mini {
   .cart-row { grid-template-columns: 82px 1fr; gap: var(--sp-lg); }
   .cart-row img { width: 82px; height: 98px; }
   .cart-row-total { grid-column: 2; }
+  .prose h2 { margin-top: var(--sp-4xl); }
   .policy-table { font-size: var(--fs-md); }
-  .policy-table th,
-  .policy-table td { padding: var(--sp-md) var(--sp-lg); }
+  .policy-table th, .policy-table td { padding: var(--sp-md) var(--sp-sm); }
 }
 
-/* -----------------------------------------------------------------------------
-   35. HEADER FIT
-   The currency select was competing with the logo for room on small screens.
-   -------------------------------------------------------------------------- */
-@media (max-width: 640px) {
-  .cur-switch {
-    height: 40px;
-    padding: 0 var(--sp-sm);
-    font-size: var(--fs-2xs);
-    letter-spacing: .04em;
-    margin-right: 0;
-  }
-
-  .nav { gap: var(--sp-xs); }
-  .logo img { height: 30px; }
-  .logo .lt b { font-size: var(--fs-md); letter-spacing: .06em; }
-  .logo .lt small { font-size: 7px; }
-}
-
-@media (max-width: 400px) {
-  /* Drop the wordmark; the LB monogram carries the brand. */
-  .logo .lt { display: none; }
-  .cur-switch { font-size: 10px; padding: 0 6px; }
-}
-
-/* On phones a three-column table cannot fit. Reflow each row into a stacked
-   card with the header text supplied via data-label, so the Cost column is
-   visible without horizontal scrolling. */
-@media (max-width: 640px) {
-  .table-scroll { overflow-x: visible; }
-
-  .policy-table thead { display: none; }
-
-  .policy-table,
-  .policy-table tbody,
-  .policy-table tr,
-  .policy-table td {
-    display: block;
-    width: 100%;
-  }
-
-  .policy-table tr {
-    border: 1px solid var(--line);
-    border-radius: var(--r-md);
-    padding: var(--sp-lg);
-    margin-bottom: var(--sp-md);
-  }
-
-  .policy-table td {
-    border: 0;
-    padding: var(--sp-2xs) 0;
-    white-space: normal;
-    display: flex;
-    justify-content: space-between;
-    gap: var(--sp-lg);
-  }
-
-  .policy-table td::before {
-    content: attr(data-label);
-    font-size: var(--fs-sm);
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--gold);
-    flex: 0 0 auto;
-  }
-
-  .policy-table td:first-child {
-    font-size: var(--fs-xl);
-    color: var(--cream);
-    border-bottom: 1px solid var(--line);
-    padding-bottom: var(--sp-md);
-    margin-bottom: var(--sp-sm);
-  }
-
-  .policy-table td:first-child::before { content: none; }
-}
-
-/* The global `table { min-width: 600px }` exists for wide admin tables inside
-   .tablewrap. Policy tables on content pages must not inherit it. */
-.policy-table { min-width: 0; }
-
-/* The currency control is a utility, not a call to action — it should read
-   quieter than the logo and cart. */
-.cur-switch {
-  background: transparent;
-  border-color: transparent;
-  color: var(--mut);
-  font-weight: 500;
-  padding-inline: var(--sp-md);
-}
-
-.cur-switch:hover,
-.cur-switch:focus-visible {
-  background: var(--panel);
-  border-color: var(--line);
-  color: var(--gold);
-}
-
-/* -----------------------------------------------------------------------------
-   36. MOBILE MENU
-   Twelve links used to overflow and scroll. The list is now split into primary
-   shop links and a smaller support group, sized to fit one screen.
-   -------------------------------------------------------------------------- */
-.mmenu {
-  padding: 0;
-  gap: 0;
-}
-
-.mmenu-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--sp-lg) var(--sp-lg) var(--sp-lg) var(--sp-2xl);
-  border-bottom: 1px solid var(--line);
-}
-
-.mmenu-title {
-  font-size: var(--fs-sm);
-  letter-spacing: .22em;
-  text-transform: uppercase;
-  color: var(--gold);
-}
-
-.mmenu-main {
-  display: flex;
-  flex-direction: column;
-  padding: var(--sp-sm) var(--sp-2xl);
-}
-
-.mmenu-main a {
-  padding: var(--sp-lg) 0;
-  border-bottom: 1px solid var(--line);
-  font-family: 'Cormorant Garamond', serif;
-  font-size: var(--fs-6xl);
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--cream);
-}
-
-.mmenu-main a:last-child { border-bottom: 0; }
-.mmenu-main a:hover { color: var(--gold); }
-
-/* Support links: two columns, small caps, no rules — visually secondary. */
-.mmenu-sub {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0 var(--sp-lg);
-  padding: var(--sp-2xl);
-  margin-top: auto;
-  border-top: 1px solid var(--line);
-}
-
-.mmenu-sub a {
-  /* Compact visually, but still a 40px touch target. */
-  display: flex;
-  align-items: center;
-  min-height: 40px;
-  padding: 0;
-  border: 0;
-  font-size: var(--fs-sm);
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--mut);
-}
-
-.mmenu-sub a:hover { color: var(--gold); }
-
-.mmenu-cta {
-  margin: 0 var(--sp-2xl) var(--sp-2xl);
-  width: auto;
-}
-
-/* Short screens: trim the display type so everything still fits. */
-@media (max-height: 680px) {
-  .mmenu-main a {
-    font-size: var(--fs-4xl);
-    padding: var(--sp-md) 0;
-  }
-  .mmenu-sub { padding: var(--sp-lg) var(--sp-2xl); }
-  .mmenu-cta { margin-bottom: var(--sp-lg); }
-}
-
-/* <picture> is an inline wrapper; make it transparent to the layouts that
-   previously targeted the <img> directly. */
-.logo picture,
-.card-img picture,
-.hero-media picture,
-.gal-main picture,
-.col picture,
-.story .imgwrap picture,
-.float-card picture {
-  display: contents;
-}
-
-/* -----------------------------------------------------------------------------
-   37. PRODUCT PAGE — GET THE BUY BUTTON ABOVE THE FOLD
-   Measured before this change: Add-to-bag sat 1144px down on a 390px phone and
-   1563px down on an 820px tablet. A shopper had to scroll past the whole
-   gallery before they could see a price, let alone buy.
-   -------------------------------------------------------------------------- */
-
-/* Tablets have room for two columns — the single-column stack was wasting
-   half the viewport and pushing everything below the fold. */
-@media (min-width: 768px) and (max-width: 920px) {
-  .pdp {
-    grid-template-columns: 1fr 1fr;
-    gap: var(--sp-3xl);
-    align-items: start;
-  }
-
-  .gal-main {
-    position: sticky;
-    top: 96px;
-  }
-}
-
-/* Cap the gallery so it can never eat a whole screen. */
-@media (max-width: 920px) {
-  .gal-main {
-    max-height: 52vh;
-  }
-
-  .gal-main img {
-    height: 100%;
-    object-fit: contain;
-    background: var(--panel);
-  }
-}
-
-@media (max-width: 640px) {
-  .gal-main {
-    max-height: 42vh;
-  }
-
-  /* Tighten the run from image to buy button. */
-  .pdp { gap: var(--sp-xl); }
-  .thumbs { margin-top: var(--sp-sm); }
-  .thumbs button { width: 52px; }
-  .pdp-info .eyebrow { margin-bottom: var(--sp-2xs); }
-  .pdp-info h1 { margin: var(--sp-2xs) 0 var(--sp-2xs); }
-  .pdp-info .tl { margin-bottom: var(--sp-sm); }
-  .pdp-price { margin: var(--sp-md) 0; }
-  .pdp-info > .muted { margin-bottom: var(--sp-md); }
-  .vlabel { margin: var(--sp-md) 0 var(--sp-xs); }
-  .pills { margin: var(--sp-md) 0; }
-  .buy { margin: var(--sp-lg) 0 var(--sp-sm); }
-}
-
-/* -----------------------------------------------------------------------------
-   38. STICKY BUY BAR (mobile + tablet)
-   Once the real buy button scrolls away, a compact bar keeps price and
-   Add-to-bag permanently reachable. Standard practice on every major
-   beauty retailer, and the single highest-impact PDP conversion fix.
-   -------------------------------------------------------------------------- */
-.buybar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 70;
-  display: none;
-  align-items: center;
-  gap: var(--sp-lg);
-  padding: var(--sp-md) var(--sp-xl);
-  padding-bottom: max(var(--sp-md), env(safe-area-inset-bottom));
-  background: rgba(10, 10, 10, .96);
-  backdrop-filter: blur(14px);
-  border-top: 1px solid var(--line);
-  transform: translateY(100%);
-  transition: transform .35s var(--ease);
-}
-
-.buybar.on {
-  transform: none;
-}
-
-.buybar-info {
-  min-width: 0;
-  flex: 1;
-}
-
-.buybar-name {
-  font-size: var(--fs-md);
-  color: var(--cream);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
-}
-
-.buybar-price {
-  font-size: var(--fs-xl);
-  color: var(--gold);
-  font-weight: 500;
-}
-
-.buybar .btn {
-  flex: 0 0 auto;
-  min-height: 48px;
-  padding-inline: var(--sp-3xl);
-}
-
-@media (max-width: 920px) {
-  .buybar { display: flex; }
-  /* Keep the drawer and menu clear of the bar. */
-  body.lock .buybar { transform: translateY(100%); }
-}
-
-@media (max-width: 400px) {
-  .buybar { padding-inline: var(--sp-lg); gap: var(--sp-md); }
-  .buybar .btn { padding-inline: var(--sp-xl); font-size: var(--fs-2xs); }
-}
-
-/* Description now sits below the buy controls — shoppers decide on name,
-   price and size first, then read detail. */
-.pdp-desc {
-  margin-top: var(--sp-2xl);
-}
-
-@media (max-width: 640px) {
-  .pdp-desc { margin-top: var(--sp-xl); }
-}
-
-/* The rating-breakdown bar is a flex child with no intrinsic width; without an
-   explicit flex it collapsed to 0px and the histogram was invisible. */
-.rev-dist-row .bar {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.rev-dist-row > span {
-  flex: 0 0 auto;
-}
-
-/* -----------------------------------------------------------------------------
-   39. PRODUCT CARD CONTAINMENT
-   .card-body is a flex column using `margin-bottom:auto` on the price to push
-   the Add-to-bag button to the foot. That only works if the card itself is a
-   flex container with a definite height — otherwise the body overflows its
-   parent and the button spills onto whatever follows (measured: 230px of
-   overflow, colliding with the "View all products" button and the next
-   section heading).
-   -------------------------------------------------------------------------- */
-.card {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.card-img {
-  flex: 0 0 auto;
-}
-
-.card-body {
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-/* Equal-height rows so buttons align across the grid. */
-.grid {
-  align-items: stretch;
-}
-
-/* -----------------------------------------------------------------------------
-   40. STORY IMAGE SIZING
-   `.story img` set aspect-ratio but never width, so the browser fell back to
-   the height="900" HTML attribute and rendered a 900px-tall image on every
-   screen — 118% of a phone viewport, and a 53% horizontal crop on desktop
-   that cut the product bottles out of frame.
-   -------------------------------------------------------------------------- */
-.story img {
-  display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
-}
-
-/* The wrapper is a grid item; stop it stretching to the text column's height. */
-.story .imgwrap {
-  align-self: start;
-}
-
-@media (max-width: 920px) {
-  /* Wider, shorter crop reads better above stacked text. */
-  .story img {
-    aspect-ratio: 16 / 10;
-  }
-}
-
-@media (max-width: 640px) {
-  .story img {
-    aspect-ratio: 3 / 2;
-  }
-}
+/* Steps list on checkout is an <ol> here */
+.steps { list-style: none; }
+.steps li { display: flex; align-items: center; }
