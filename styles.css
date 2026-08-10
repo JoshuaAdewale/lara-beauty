@@ -176,6 +176,7 @@ button {
 .wrap {
   max-width: var(--max);
   margin: 0 auto;
+  padding-top: 25px;
   padding-left: max(clamp(16px, 4vw, 28px), env(safe-area-inset-left));
   padding-right: max(clamp(16px, 4vw, 28px), env(safe-area-inset-right));
 }
@@ -325,6 +326,9 @@ header.stuck {
   justify-content: space-between;
   height: 76px;
   gap: var(--sp-2xl);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 .logo {
@@ -490,7 +494,7 @@ header.stuck {
   grid-template-columns: 1.02fr .98fr;
   gap: clamp(28px, 5vw, 64px);
   align-items: center;
-  padding: clamp(40px, 7vw, 86px) 0 clamp(48px, 8vw, 96px);
+  /* padding: clamp(40px, 7vw, 86px) 0 clamp(48px, 8vw, 96px); */
 }
 
 .hero::before {
@@ -4115,7 +4119,7 @@ input.mini {
   }
 
   .hero-media img {
-    max-height: 600px;
+    max-height: 450px;
     object-fit: cover;
     object-position: center 18%;
   }
