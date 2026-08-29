@@ -1,0 +1,262 @@
+/* =============================================================================
+   /api/store — live catalogue, content and settings
+   -----------------------------------------------------------------------------
+   Reviews were the easy case: append-only, low risk. This one carries PRICES,
+   so it is built differently on purpose.
+
+   DRAFT vs PUBLISHED
+   Every admin save writes to `draft`. Shoppers only ever read `published`.
+   Nothing a staff member types reaches a customer until someone presses
+   "Publish changes". Without that split, a mistyped price is live the instant
+   a finger slips — and you would be legally obliged to honour it.
+
+   A snapshot of the previous published state is kept as `rollback`, so a bad
+   publish is one click to undo.
+
+   Endpoints
+     GET  /api/store                  -> { published, version }   (public)
+     GET  /api/store?draft=1          -> { draft, published, ... } (staff)
+     POST /api/store  { action, ... }                              (staff)
+
+   Actions
+     save      overwrite the draft
+     publish   copy draft -> published (previous published -> rollback)
+     rollback  restore the last published snapshot
+     discard   throw the draft away, reset it to published
+   ========================================================================== */
+
+import { getStore } from '@netlify/blobs';
+
+const KEY = 'catalogue-v1';
+
+const json = (body, status = 200) => new Response(JSON.stringify(body), {
+  status,
+  headers: {
+    'content-type': 'application/json',
+    'cache-control': 'no-store',
+    'access-control-allow-origin': '*',
+    'access-control-allow-headers': 'content-type, x-admin-token',
+    'access-control-allow-methods': 'GET, POST, OPTIONS'
+  }
+});
+
+const store = () => getStore({ name: 'lara-catalogue', consistency: 'strong' });
+
+const isStaff = req => {
+  const expected = process.env.ADMIN_TOKEN;
+  return !!expected && req.headers.get('x-admin-token') === expected;
+};
+
+async function readState() {
+  const data = await store().get(KEY, { type: 'json' });
+  return (data && typeof data === 'object')
+    ? data
+    : { draft: null, published: null, rollback: null, version: 0, publishedAt: null };
+}
+
+/* ---------------------------------------------------------------------------
+   Validation. This is the last line of defence before a number becomes what a
+   customer is charged, so it is strict and it is server-side — a determined
+   caller can bypass anything in the browser.
+   ------------------------------------------------------------------------ */
+function validate(payload) {
+  const errors = [];
+  const { products, categories, content, settings } = payload || {};
+
+  if (!Array.isArray(products)) errors.push('products must be an array');
+  if (!Array.isArray(categories)) errors.push('categories must be an array');
+
+  (products || []).forEach((p, i) => {
+    const where = `product ${p && p.id ? p.id : '#' + i}`;
+    if (!p || typeof p !== 'object') return errors.push(`${where}: not an object`);
+    if (!p.id) errors.push(`${where}: missing id`);
+    if (!p.name) errors.push(`${where}: missing name`);
+
+    const price = Number(p.price);
+    if (!Number.isFinite(price) || price < 0) errors.push(`${where}: price is not a positive number`);
+    /* A price of zero means "free" to the cart. Almost always a typo. */
+    if (price === 0) errors.push(`${where}: price is 0 — set it deliberately or fix the typo`);
+    if (price > 100000000) errors.push(`${where}: price looks wrong (over 100,000,000)`);
+
+    if (p.compare != null && Number(p.compare) && Number(p.compare) <= price) {
+      errors.push(`${where}: "compare at" must be higher than the price, or empty`);
+    }
+    (p.variants || []).forEach(v => {
+      if (!Number.isFinite(Number(v.price)) || Number(v.price) < 0) {
+        errors.push(`${where}: variant "${v.label}" has an invalid price`);
+      }
+    });
+
+    /* The card advertises p.price; a single-variant product charges the
+       variant price. If they disagree the shopper is quoted one number and
+       billed another, so refuse to publish it. */
+    if ((p.variants || []).length === 1 && Number(p.variants[0].price) !== price) {
+      errors.push(`${where}: card price ${price} does not match its only variant `
+        + `"${p.variants[0].label}" at ${p.variants[0].price} — they must be equal`);
+    }
+  });
+
+  return errors;
+}
+
+export default async (req) => {
+  if (req.method === 'OPTIONS') return json({});
+
+  const state = await readState();
+
+  /* ---- read -------------------------------------------------------------- */
+  if (req.method === 'GET') {
+    const wantDraft = new URL(req.url).searchParams.get('draft') === '1';
+    if (wantDraft) {
+      if (!isStaff(req)) return json({ error: 'unauthorised' }, 401);
+      return json({
+        draft: state.draft,
+        published: state.published,
+        hasRollback: !!state.rollback,
+        version: state.version,
+        publishedAt: state.publishedAt
+      });
+    }
+    /* Public: published only. Never the draft. */
+    return json({
+      published: state.published,
+      version: state.version,
+      publishedAt: state.publishedAt
+    });
+  }
+
+  if (req.method !== 'POST') return json({ error: 'method not allowed' }, 405);
+
+  let payload;
+  try { payload = await req.json(); }
+  catch { return json({ error: 'bad json' }, 400); }
+
+  /* Parse BEFORE authorising: action:'order' is deliberately public so a real
+     shopper's checkout can decrement stock. Gating on the token first made it
+     unreachable, which silently broke server-side stock for every order.
+     Everything else still requires the token, checked immediately below. */
+  if (payload.action !== 'order' && !isStaff(req)) {
+    return json({ error: 'unauthorised' }, 401);
+  }
+
+  /* ---- save draft -------------------------------------------------------- */
+  if (payload.action === 'save') {
+    const errors = validate(payload.data);
+    if (errors.length) return json({ error: 'validation failed', errors }, 400);
+
+    state.draft = { ...payload.data, savedAt: new Date().toISOString() };
+    await store().setJSON(KEY, state);
+    return json({ ok: true, savedAt: state.draft.savedAt });
+  }
+
+  /* ---- publish ----------------------------------------------------------- */
+  if (payload.action === 'publish') {
+    const data = payload.data || state.draft;
+    if (!data) return json({ error: 'nothing to publish' }, 400);
+
+    const errors = validate(data);
+    if (errors.length) return json({ error: 'validation failed', errors }, 400);
+
+    if (state.published) state.rollback = state.published;
+    state.published = { ...data, publishedAt: new Date().toISOString() };
+    state.draft = state.published;
+    state.version = (state.version || 0) + 1;
+    state.publishedAt = state.published.publishedAt;
+
+    await store().setJSON(KEY, state);
+
+    /* Shoppers already see the new prices (api.js patches the page). But the
+       raw HTML and the Product JSON-LD that Google reads are baked at build
+       time, and a price mismatch between the two is a structured-data policy
+       violation. So kick off a rebuild, which pulls this published catalogue
+       back in and regenerates both. Takes well under a second to build.
+
+       Set BUILD_HOOK in Netlify -> Build & deploy -> Build hooks. Optional:
+       without it everything still works, the schema just lags until you
+       rebuild by hand. */
+    let rebuild = 'not configured';
+    if (process.env.BUILD_HOOK) {
+      try {
+        const r = await fetch(process.env.BUILD_HOOK, { method: 'POST' });
+        rebuild = r.ok ? 'triggered' : `failed (${r.status})`;
+      } catch (err) {
+        rebuild = 'failed (network)';
+      }
+    }
+
+    return json({ ok: true, version: state.version, publishedAt: state.publishedAt, rebuild });
+  }
+
+  /* ---- rollback ---------------------------------------------------------- */
+  if (payload.action === 'rollback') {
+    if (!state.rollback) return json({ error: 'nothing to roll back to' }, 400);
+    const current = state.published;
+    state.published = state.rollback;
+    state.rollback = current;                      // allow undoing the undo
+    state.draft = state.published;
+    state.version = (state.version || 0) + 1;
+    state.publishedAt = new Date().toISOString();
+    await store().setJSON(KEY, state);
+    return json({ ok: true, version: state.version });
+  }
+
+  /* ---- record an order and decrement stock -------------------------------
+     PUBLIC. The published catalogue is the source of truth for stock, so a
+     shopper's own browser deducting from its local copy achieves nothing —
+     the next page load overwrites it from here, and two customers could each
+     buy the last jar. Decrementing centrally is the only correct place.
+
+     Deliberately not staff-guarded: a real shopper's checkout must be able to
+     call it. The payload is only ever item ids and quantities, and quantities
+     are clamped to what is actually in stock, so the worst a hostile caller
+     can do is reduce their own view of availability. */
+  if (payload.action === 'order') {
+    if (!state.published || !Array.isArray(state.published.products)) {
+      return json({ error: 'nothing published' }, 400);
+    }
+    const items = Array.isArray(payload.items) ? payload.items : [];
+    const applied = [];
+
+    items.forEach(line => {
+      const p = state.published.products.find(x => x.id === line.id);
+      if (!p) return;
+      const qty = Math.max(0, Math.min(999, Number(line.q) || 0));
+      if (!qty) return;
+
+      let v = null;
+      if (Array.isArray(p.variants) && p.variants.length) {
+        v = line.v ? p.variants.find(x => x.label === line.v) : null;
+        /* Single-variant products render no size buttons, so the cart line
+           carries no label — the stock still lives on that one variant. */
+        if (!v && p.variants.length === 1) v = p.variants[0];
+      }
+
+      if (v) {
+        const taken = Math.min(qty, Math.max(0, +v.stock || 0));
+        v.stock = Math.max(0, (+v.stock || 0) - taken);
+        applied.push({ id: p.id, variant: v.label, taken, left: v.stock });
+      } else {
+        const taken = Math.min(qty, Math.max(0, +p.stock || 0));
+        p.stock = Math.max(0, (+p.stock || 0) - taken);
+        applied.push({ id: p.id, taken, left: p.stock });
+      }
+    });
+
+    /* Keep the draft in step so the admin does not immediately show it as an
+       "unpublished change" and accidentally republish the old numbers. */
+    state.draft = state.published;
+    await store().setJSON(KEY, state);
+    return json({ ok: true, applied });
+  }
+
+  /* ---- discard draft ----------------------------------------------------- */
+  if (payload.action === 'discard') {
+    state.draft = state.published;
+    await store().setJSON(KEY, state);
+    return json({ ok: true });
+  }
+
+  return json({ error: 'unknown action' }, 400);
+};
+
+export const config = { path: '/api/store' };

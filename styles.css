@@ -1,4 +1,148 @@
 /* =============================================================================
+   SELF-HOSTED FONTS
+   Served from our own domain rather than fonts.googleapis.com. This removes a
+   render-blocking third-party request and keeps visitor IP addresses out of
+   Google's hands — a German court ruled that transfer a GDPR breach, and the
+   shop now prices in Euros.
+   ========================================================================== */
+
+/* latin-ext */
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/co3ZmX5slCNuHLi8bLeY9MK7whWMhyjYrEtGmSq17w.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/co3ZmX5slCNuHLi8bLeY9MK7whWMhyjYrEtImSo.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url(assets/fonts/co3ZmX5slCNuHLi8bLeY9MK7whWMhyjYrEtGmSq17w.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url(assets/fonts/co3ZmX5slCNuHLi8bLeY9MK7whWMhyjYrEtImSo.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/co3bmX5slCNuHLi8bLeY9MK7whWMhyjYp3tKgS4.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/co3bmX5slCNuHLi8bLeY9MK7whWMhyjYqXtK.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(assets/fonts/co3bmX5slCNuHLi8bLeY9MK7whWMhyjYp3tKgS4.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(assets/fonts/co3bmX5slCNuHLi8bLeY9MK7whWMhyjYqXtK.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(assets/fonts/co3bmX5slCNuHLi8bLeY9MK7whWMhyjYp3tKgS4.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(assets/fonts/co3bmX5slCNuHLi8bLeY9MK7whWMhyjYqXtK.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Jost';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url(assets/fonts/92zatBhPNqw73oTd4g.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Jost';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/92zatBhPNqw73oTd4g.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Jost';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(assets/fonts/92zatBhPNqw73oTd4g.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Jost';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(assets/fonts/92zatBhPNqw73oTd4g.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Jost';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/fonts/92zatBhPNqw73oTd4g.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* =============================================================================
    LARA BEAUTY ATELIER — Stylesheet
    =============================================================================
    Contents
@@ -55,6 +199,16 @@
   --shadow: 0 10px 34px -14px rgba(0, 0, 0, .9);
   --shadow-g: 0 14px 40px -16px rgba(201, 162, 39, .45);
   --grad: linear-gradient(135deg, #9C7B1B, #E3C25C 45%, #C9A227);
+
+  /* Surfaces that were hardcoded before light mode existed. Tokenised so the
+     [data-theme="light"] block below can invert them in one place. */
+  --on-gold: #150F00;              /* text sitting on a gold fill */
+  --header-bg: rgba(10, 10, 10, .82);
+  --header-bg-solid: rgba(10, 10, 10, .95);
+  --overlay: rgba(0, 0, 0, .68);   /* modal / drawer scrim */
+  --scrim-strong: rgba(0, 0, 0, .75);
+  --img-veil: linear-gradient(to top, rgba(0, 0, 0, .92), transparent 62%);
+  --mmenu-bg: rgba(10, 10, 10, .96);
 
   /* Type scale — modular, 16px root */
   --fs-3xs: .5rem;      /* 8px  */
@@ -118,19 +272,31 @@ body {
   color: var(--cream);
   font-size: var(--fs-2xl);
   line-height: 1.65;
-  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
+/* Scroll lock for open overlays (mobile menu, cart drawer, modals).
+   Now that <html> is the scroll container, `overflow:hidden` on <body> alone
+   does nothing — the page kept scrolling behind the menu. It has to be applied
+   to the element that actually scrolls. */
+html:has(body.lock),
 body.lock {
   overflow: hidden;
 }
 
-html,
-body {
+/* Sideways-overflow guard.
+   IMPORTANT: this must live on <html> ONLY. Setting overflow-x on <body> makes
+   the body its own scroll container, and `position: sticky` then anchors to
+   that box rather than the viewport — so the header scrolled away instead of
+   staying put. Measured: header top went to -861px on scroll. */
+html {
   max-width: 100%;
   overflow-x: hidden;
+}
+
+body {
+  max-width: 100%;
 }
 
 h1,
@@ -176,7 +342,6 @@ button {
 .wrap {
   max-width: var(--max);
   margin: 0 auto;
-  padding-top: 25px;
   padding-left: max(clamp(16px, 4vw, 28px), env(safe-area-inset-left));
   padding-right: max(clamp(16px, 4vw, 28px), env(safe-area-inset-right));
 }
@@ -227,6 +392,9 @@ button {
   border-radius: var(--r-pill);
   font-size: var(--fs-base);
   letter-spacing: .14em;
+  /* Uppercase tracking adds a trailing space after the last letter; nudge the
+     label back by that much so it sits optically centred. */
+  text-indent: .14em;
   text-transform: uppercase;
   font-weight: 500;
   cursor: pointer;
@@ -247,7 +415,7 @@ button {
 
 .btn-primary {
   background: var(--grad);
-  color: #150F00;
+  color: var(--on-gold);
   font-weight: 600;
 }
 
@@ -296,21 +464,20 @@ button {
    -------------------------------------------------------------------------- */
 .announce {
   background: var(--grad);
-  color: #150F00;
+  color: var(--on-gold);
   text-align: center;
   font-size: var(--fs-sm);
   letter-spacing: .16em;
   text-transform: uppercase;
-  padding: 5px 14px;
+  padding: 9px 14px;
   font-weight: 500;
 }
 
 header {
-  position: fixed;
-  top: 25px;
-  width:100%;
+  position: sticky;
+  top: 0;
   z-index: 60;
-  background: rgba(10, 10, 10, .82);
+  background: var(--header-bg);
   backdrop-filter: blur(16px) saturate(1.4);
   border-bottom: 1px solid var(--line);
   transition: box-shadow .3s, background .3s;
@@ -318,19 +485,15 @@ header {
 
 header.stuck {
   box-shadow: 0 10px 30px -22px #000;
-  background: rgba(10, 10, 10, .95);
+  background: var(--header-bg-solid);
 }
 
 .nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 65px;
-  width: auto;
+  height: 76px;
   gap: var(--sp-2xl);
-  position: relative;
-  top: 0;
-  z-index: 1000;
 }
 
 .logo {
@@ -444,7 +607,7 @@ header.stuck {
   padding: 0 5px;
   border-radius: var(--r-md);
   background: var(--grad);
-  color: #150F00;
+  color: var(--on-gold);
   font-size: var(--fs-xs);
   font-weight: 700;
   display: grid;
@@ -496,7 +659,8 @@ header.stuck {
   grid-template-columns: 1.02fr .98fr;
   gap: clamp(28px, 5vw, 64px);
   align-items: center;
-  padding: clamp(40px, 7vw, 86px) 0 clamp(48px, 8vw, 96px);
+  padding-top: 28px;
+  padding-bottom: 48px;
 }
 
 .hero::before {
@@ -505,7 +669,7 @@ header.stuck {
   top: -30%;
   left: -10%;
   width: 60vw;
-  height: 50vw;
+  height: 60vw;
   max-width: 760px;
   max-height: 760px;
   background: radial-gradient(circle, rgba(201, 162, 39, .14), transparent 68%);
@@ -515,7 +679,7 @@ header.stuck {
 
 .hero-copy h1 {
   font-size: clamp(42px, 7.4vw, 86px);
-  margin: 36px 0 20px;
+  margin: 16px 0 20px;
   letter-spacing: -.02em;
 }
 
@@ -659,15 +823,35 @@ header.stuck {
 /* -----------------------------------------------------------------------------
    9. SECTION HEADINGS
    -------------------------------------------------------------------------- */
+/* Vertical rhythm uses explicit padding at named breakpoints rather than
+   clamp(). clamp scales continuously with the viewport, which made the top of
+   every section drift with window width and looked slack on wide screens.
+   Fixed steps are predictable and easier to reason about when editing.
+   Top is deliberately lighter than bottom: a heading needs less air above it
+   than the gap that separates it from the previous block. */
 section {
-  /* padding: clamp(48px, 7vw, 92px) 0; */
-  padding: 12px;
+  padding-top: 32px;
+  padding-bottom: 48px;
+}
+
+@media (min-width: 700px) {
+  section {
+    padding-top: 44px;
+    padding-bottom: 64px;
+  }
+}
+
+@media (min-width: 1100px) {
+  section {
+    padding-top: 56px;
+    padding-bottom: 80px;
+  }
 }
 
 .sec-head {
   text-align: center;
   max-width: 640px;
-  margin: 0 auto clamp(30px, 4vw, 52px);
+  margin: 0 auto 28px;
 }
 
 .sec-head h2 {
@@ -723,7 +907,7 @@ section {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, .92), transparent 62%);
+  background: var(--img-veil);
 }
 
 .col-txt {
@@ -795,7 +979,7 @@ section {
 
 .chip.on {
   background: var(--grad);
-  color: #150F00;
+  color: var(--on-gold);
   border-color: transparent;
   font-weight: 600;
 }
@@ -875,7 +1059,7 @@ select.sort {
   top: 11px;
   left: 11px;
   background: var(--grad);
-  color: #150F00;
+  color: var(--on-gold);
   padding: 5px 12px;
   border-radius: var(--r-pill);
   font-size: var(--fs-2xs);
@@ -1289,7 +1473,8 @@ select.sort {
 .rev-wrap {
   background: var(--panel);
   border-block: 1px solid var(--line);
-  padding: clamp(40px, 6vw, 72px) 0;
+  padding-top: 32px;
+  padding-bottom: 48px;
 }
 
 .rev-head {
@@ -1506,7 +1691,8 @@ select.sort {
   background: var(--panel);
   border: 1px solid var(--gold-d);
   border-radius: var(--r);
-  padding: clamp(34px, 5vw, 62px) clamp(20px, 4vw, 40px);
+  padding-block: 36px;
+  padding-inline: 20px;
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -1562,7 +1748,8 @@ select.sort {
 footer {
   background: var(--panel);
   border-top: 1px solid var(--line);
-  padding: clamp(40px, 6vw, 62px) 0 26px;
+  padding-top: 40px;
+  padding-bottom: 26px;
 }
 
 .foot {
@@ -1636,7 +1823,7 @@ footer {
 .scrim {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, .68);
+  background: var(--overlay);
   backdrop-filter: blur(4px);
   opacity: 0;
   pointer-events: none;
@@ -1831,7 +2018,7 @@ footer {
 
 .steps b.on i {
   background: var(--grad);
-  color: #150F00;
+  color: var(--on-gold);
   border-color: transparent;
   font-weight: 700;
 }
@@ -1970,7 +2157,8 @@ legend {
   text-align: center;
   max-width: 540px;
   margin: 0 auto;
-  padding: clamp(56px, 9vw, 96px) 20px;
+  padding-block: 56px;
+  padding-inline: 20px;
 }
 
 .done .tick {
@@ -2547,7 +2735,7 @@ input.mini {
   justify-content: center;
   padding: var(--sp-2xl);
   overflow-y: auto;
-  background: rgba(0, 0, 0, .75);
+  background: var(--scrim-strong);
   backdrop-filter: blur(4px);
 }
 
@@ -2731,8 +2919,12 @@ input.mini {
 }
 
 @media(max-width:640px) {
+  /* Small phones: tighter still, and top stays lighter than bottom.
+     Longhand so it cannot silently override the base rule's asymmetry the way
+     the old `padding: 44px 0` shorthand did. */
   section {
-    padding: 44px 0;
+    padding-top: 26px;
+    padding-bottom: 40px;
   }
   .wrap {
     padding: 0 16px;
@@ -3396,7 +3588,7 @@ input.mini {
   z-index: 200;
   padding: 12px 20px;
   background: var(--grad);
-  color: #150F00;
+  color: var(--on-gold);
   font-size: var(--fs-md);
   border-radius: 0 0 10px 0;
 }
@@ -3548,6 +3740,11 @@ input.mini {
 /* Column helpers for admin panels */
 .cols-2 { grid-template-columns: 1fr 1fr; }
 .cols-3 { grid-template-columns: repeat(3, 1fr); }
+.cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* KPI strips collapse rather than squeezing four cards into a phone width. */
+@media (max-width: 1000px) { .cols-4 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px)  { .cols-4 { grid-template-columns: 1fr; } }
 
 /* Repeated "editable row" card in the Pages editor */
 .edit-row {
@@ -4080,7 +4277,7 @@ input.mini {
   padding: 0 var(--sp-xs);
   border-radius: var(--r-pill);
   background: var(--grad);
-  color: #150F00;
+  color: var(--on-gold);
   font-size: var(--fs-xs);
   font-weight: 700;
   display: grid;
@@ -4113,16 +4310,39 @@ input.mini {
   padding-top: var(--sp-3xl);
 }
 
+/* THE MIDDLE BAND — 641px to 920px.
+   The portrait cap below only applied from 921px, and the stacked-phone layout
+   only below 640px, so tablets kept the full 4/5 portrait in a two-column
+   grid. Measured at 768x1024: hero ran 1140px tall inside a 1024px viewport
+   and the image stood 252px taller than the copy beside it — the imbalance
+   that made the hero look wrong. A shorter ratio here keeps the two columns
+   near the same height. */
+@media (min-width: 620px) and (max-width: 920px) {
+  .hero-media img {
+    aspect-ratio: 4 / 4.2;
+    max-height: 440px;
+    object-fit: cover;
+    object-position: center 18%;
+  }
+
+  .hero-media .frame {
+    max-height: 460px;
+    padding: var(--sp-sm);
+  }
+}
+
 /* Cap the portrait so the media column can't tower over the copy and force a
    void beneath it. 4/5 is kept as the intrinsic ratio; the cap only bites on
    wide screens where the column would otherwise run to ~705px. */
 @media (min-width: 921px) {
   .hero-media .frame {
-    max-height: 620px;
+    /* Tightened from 620/600: the image still stood 68px proud of the copy,
+       which reads as a misalignment rather than a deliberate offset. */
+    max-height: 560px;
   }
 
   .hero-media img {
-    max-height: 450px;
+    max-height: 540px;
     object-fit: cover;
     object-position: center 18%;
   }
@@ -4193,7 +4413,7 @@ input.mini {
 /* Section rhythm: the first section after the marquee doubled its top padding
    against the marquee's own border. */
 .marquee + section {
-  padding-top: clamp(36px, 5vw, 72px);
+  padding-top: 28px;
 }
 
 /* Listing header: filter chips sat too close to the sort row. */
@@ -4227,7 +4447,7 @@ input.mini {
 
 /* Prose pages had a large gap before the newsletter block. */
 .prose {
-  padding-bottom: clamp(40px, 6vw, 64px);
+  padding-bottom: 48px;
 }
 
 @media (max-width: 640px) {
@@ -4545,7 +4765,7 @@ input.mini {
 /* --- long-form content pages ------------------------------------------------ */
 .prose {
   max-width: 720px;
-  padding: var(--sp-3xl) 0 clamp(40px, 6vw, 64px);
+  padding: var(--sp-3xl) 0 48px;
 }
 
 .prose h1 {
@@ -4941,7 +5161,7 @@ input.mini {
   gap: var(--sp-lg);
   padding: var(--sp-md) var(--sp-xl);
   padding-bottom: max(var(--sp-md), env(safe-area-inset-bottom));
-  background: rgba(10, 10, 10, .96);
+  background: var(--mmenu-bg);
   backdrop-filter: blur(14px);
   border-top: 1px solid var(--line);
   transform: translateY(100%);
@@ -5070,4 +5290,525 @@ input.mini {
   .story img {
     aspect-ratio: 3 / 2;
   }
+}
+
+/* -----------------------------------------------------------------------------
+   41. COOKIE CONSENT
+   Required before any analytics loads, for EU/UK visitors.
+   -------------------------------------------------------------------------- */
+.consent {
+  position: fixed;
+  left: var(--sp-xl);
+  right: var(--sp-xl);
+  bottom: var(--sp-xl);
+  z-index: 130;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2xl);
+  flex-wrap: wrap;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--sp-2xl);
+  background: var(--panel);
+  border: 1px solid var(--gold-d);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(140%);
+  transition: transform .5s var(--ease);
+}
+
+.consent.on { transform: none; }
+
+.consent-text {
+  flex: 1;
+  min-width: 220px;
+  font-size: var(--fs-md);
+  color: var(--mut);
+  margin: 0;
+}
+
+.consent-text a { color: var(--gold); text-decoration: underline; }
+
+.consent-actions {
+  display: flex;
+  gap: var(--sp-md);
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .consent {
+    left: var(--sp-lg);
+    right: var(--sp-lg);
+    bottom: var(--sp-lg);
+    padding: var(--sp-xl);
+    gap: var(--sp-lg);
+  }
+  .consent-actions { width: 100%; }
+  .consent-actions .btn { flex: 1; }
+  /* Clear the sticky buy bar on product pages. */
+  body:has(.buybar) .consent { bottom: 88px; }
+}
+
+/* =============================================================================
+   JOURNAL (blog)
+   -----------------------------------------------------------------------------
+   Editorial pages reuse .prose for the body and .col/.cols for the card grid,
+   so only the pieces that do not exist elsewhere are defined here.
+   ========================================================================== */
+.sec-head-left { text-align: left; margin-inline: 0; }
+.sec-head-left .rule { margin-inline: 0; }
+
+.post { max-width: 760px; margin: 0 auto; }
+
+.post-head { padding-top: var(--sp-xl); }
+.post-head h1 {
+  font-size: clamp(28px, 5vw, 46px);
+  line-height: 1.15;
+  margin: var(--sp-md) 0 var(--sp-lg);
+}
+.post-lede {
+  font-size: clamp(16px, 2.2vw, 19px);
+  line-height: 1.6;
+  color: var(--txt);
+  margin-bottom: var(--sp-lg);
+}
+.post-meta { font-size: var(--fs-lg); color: var(--mut); }
+
+.post-hero {
+  margin: var(--sp-3xl) 0;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+/* width/height keep the aspect box; the attributes alone are not enough. */
+/* Article hero.
+   12/7 was cropping portrait photography to 47% of its height, taken from the
+   centre — which decapitated the model on two of the six articles. A gentler
+   ratio plus a top-biased focal point keeps faces in frame whatever the source
+   image shape, and the max-height stops landscape shots dominating the screen. */
+.post-hero img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  max-height: 460px;
+  object-fit: cover;
+  object-position: center 22%;
+}
+
+@media (max-width: 700px) {
+  .post-hero img {
+    aspect-ratio: 4 / 3;
+    max-height: 300px;
+  }
+}
+
+.post-toc {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--sp-xl);
+  margin-bottom: var(--sp-3xl);
+}
+.post-toc h2 {
+  font-size: var(--fs-lg);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--gold);
+  margin-bottom: var(--sp-md);
+}
+.post-toc ol { margin: 0; padding-left: 1.2em; color: var(--mut); }
+.post-toc li { margin-bottom: 6px; }
+.post-toc a { color: var(--mut); text-decoration: none; }
+.post-toc a:hover, .post-toc a:focus-visible { color: var(--gold); text-decoration: underline; }
+
+.post-body { max-width: none; padding-top: 0; }
+.post-body > h2:first-child { margin-top: 0; }
+.post-body p { font-size: 16px; line-height: 1.75; }
+.post-body li { line-height: 1.7; }
+
+.callout {
+  border-left: 3px solid var(--gold);
+  background: var(--panel);
+  padding: var(--sp-xl);
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+  margin: var(--sp-3xl) 0;
+}
+.callout p { margin: 0; color: var(--txt); font-style: italic; }
+
+/* Inline product card inside an article. */
+.inline-buy {
+  display: grid;
+  grid-template-columns: 96px 1fr auto;
+  gap: var(--sp-xl);
+  align-items: center;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--sp-xl);
+  margin: var(--sp-3xl) 0;
+}
+.inline-buy .ib-img { display: block; border-radius: 8px; overflow: hidden; }
+.inline-buy .ib-img img { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; }
+.inline-buy h3 { font-size: var(--fs-4xl); margin: 2px 0 4px; }
+.inline-buy h3 a { color: var(--txt); text-decoration: none; }
+.inline-buy h3 a:hover { color: var(--gold); }
+.inline-buy .tl { color: var(--mut); font-size: var(--fs-lg); margin: 0 0 6px; }
+.inline-buy .price { color: var(--gold); font-weight: 600; margin: 0; }
+.inline-buy .eyebrow { margin: 0; }
+.inline-buy .ib-txt { min-width: 0; }
+/* The shared .btn centres text with letter-spacing; without nowrap and an
+   explicit width the label gets clipped inside the auto-sized grid track. */
+/* .prose a paints every link gold and underlines it. Inside an article that is
+   right for body links and wrong for a button — gold text on the gold gradient
+   is unreadable. Restore the button's own colours where the two overlap. */
+.inline-buy .btn { white-space: nowrap; justify-self: end; width: min-content; text-decoration: none; }
+.prose .btn-primary, .post-body .btn-primary { color: var(--on-gold); text-decoration: none; }
+.prose .btn-ghost, .post-body .btn-ghost { text-decoration: none; }
+
+@media (max-width: 640px) {
+  .inline-buy { grid-template-columns: 72px 1fr; }
+  .inline-buy .btn { grid-column: 1 / -1; width: 100%; }
+}
+
+.post-faq { max-width: 760px; margin: clamp(40px, 6vw, 64px) auto 0; }
+.post-faq > h2 { font-size: clamp(21px, 2.6vw, 28px); margin-bottom: var(--sp-xl); color: var(--gold); }
+.faq-item {
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--sp-lg) var(--sp-xl);
+  margin-bottom: var(--sp-md);
+  background: var(--panel);
+}
+.faq-item summary { cursor: pointer; font-weight: 600; list-style: none; }
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::after { content: '+'; float: right; color: var(--gold); font-size: 20px; line-height: 1; }
+.faq-item[open] summary::after { content: '–'; }
+.faq-item p { color: var(--mut); margin: var(--sp-md) 0 0; line-height: 1.7; }
+
+.post-foot {
+  margin-top: clamp(40px, 6vw, 64px);
+  padding-top: var(--sp-xl);
+  border-top: 1px solid var(--line);
+}
+.post-related { margin-top: clamp(48px, 8vw, 80px); }
+
+/* Journal index */
+.post-lead {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: clamp(20px, 4vw, 44px);
+  align-items: center;
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--panel);
+  margin-bottom: clamp(32px, 5vw, 56px);
+}
+.post-lead:hover { border-color: var(--gold-d); }
+.post-lead-img img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  object-position: center 22%;   /* keeps faces in frame on portrait sources */
+}
+.post-lead-txt { padding: var(--sp-xl) clamp(16px, 3vw, 32px) var(--sp-xl) 0; }
+.post-lead-txt h2 { font-size: clamp(22px, 3vw, 32px); margin: var(--sp-sm) 0 var(--sp-md); }
+.post-lead-txt p { color: var(--mut); margin-bottom: var(--sp-xl); line-height: 1.65; }
+
+@media (max-width: 860px) {
+  .post-lead { grid-template-columns: 1fr; }
+  .post-lead-txt { padding: 0 var(--sp-xl) var(--sp-xl); }
+}
+
+.journal-grid { margin-bottom: clamp(32px, 5vw, 56px); }
+.post-card img { aspect-ratio: 5 / 3; object-fit: cover; object-position: center 22%; }
+.post-card .col-txt h3 { font-size: var(--fs-4xl); line-height: 1.3; }
+
+/* Sample-review disclosure. Visible, not buried — the point is that nobody
+   can mistake placeholder copy for customer feedback. */
+.rev-demo-note {
+  border: 1px dashed var(--gold-d);
+  background: var(--panel);
+  color: var(--mut);
+  border-radius: var(--r-md);
+  padding: var(--sp-lg) var(--sp-xl);
+  margin-bottom: var(--sp-3xl);
+  font-size: var(--fs-lg);
+  line-height: 1.6;
+}
+.rev-demo-note strong { color: var(--gold); }
+
+/* Live-connection banner — the positive counterpart to .attention-panel.
+   Green-gold rather than amber, so "connected" reads differently at a glance. */
+.live-panel {
+  border-left: 3px solid #4E9A5F;
+  background: linear-gradient(90deg, rgba(78, 154, 95, .10), transparent 60%);
+}
+.live-title {
+  color: #7FBF8C;
+  font-size: var(--fs-4xl);
+  margin-bottom: var(--sp-sm);
+}
+.live-title::before {
+  content: '';
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #4E9A5F;
+  margin-right: 8px;
+  vertical-align: middle;
+  box-shadow: 0 0 0 3px rgba(78, 154, 95, .22);
+}
+
+/* =============================================================================
+   PUBLISH BAR (admin)
+   -----------------------------------------------------------------------------
+   Sits above every admin view. Amber when changes are waiting, quiet green when
+   the live site matches what you are looking at.
+   ========================================================================== */
+.publish-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-xl);
+  flex-wrap: wrap;
+  padding: var(--sp-lg) var(--sp-xl);
+  margin-bottom: var(--sp-xl);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--panel);
+}
+.publish-bar.has-changes {
+  border-color: var(--gold-d);
+  background: linear-gradient(90deg, rgba(201, 162, 39, .12), transparent 70%);
+}
+.pb-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pb-txt b { color: var(--gold); }
+.pb-txt .pb-live { color: #7FBF8C; }
+.pb-txt .muted {
+  font-size: var(--fs-lg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 60ch;
+}
+.pb-actions { display: flex; gap: var(--sp-sm); flex-wrap: wrap; }
+
+@media (max-width: 700px) {
+  .publish-bar { flex-direction: column; align-items: stretch; }
+  .pb-txt .muted { white-space: normal; }
+  .pb-actions .btn { flex: 1; }
+}
+
+.change-list {
+  list-style: none;
+  margin: var(--sp-lg) 0;
+  padding: 0;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+.change-list li {
+  padding: var(--sp-md) var(--sp-lg);
+  border-left: 2px solid var(--gold-d);
+  background: var(--panel2);
+  margin-bottom: 6px;
+  border-radius: 0 6px 6px 0;
+  font-size: var(--fs-lg);
+}
+
+/* =============================================================================
+   LIGHT THEME
+   -----------------------------------------------------------------------------
+   Only COLOUR tokens are overridden. Spacing, type scale, radii and the gold
+   accent are shared, so the two themes cannot drift apart in layout — a change
+   to a component is automatically correct in both.
+
+   Applied as [data-theme="light"] on <html>, set by an inline script in <head>
+   before first paint. Doing it there rather than in site.js avoids the white
+   flash a deferred script would cause.
+
+   Contrast checked against WCAG AA (4.5:1 for body text):
+     --ink   #24211C on --black #FBF8F4  = 12.6:1
+     --mut   #6B6259 on --black #FBF8F4  =  5.3:1
+     --gold-d #7A5F12 on --panel #FFFFFF =  5.9:1
+   The dark theme's #C9A227 gold is only 2.4:1 on white, so light mode uses the
+   darker --gold-d for text while keeping bright gold for fills, where it sits
+   behind near-black text instead.
+   ========================================================================== */
+[data-theme="light"] {
+  --black: #FBF8F4;        /* page background */
+  --ink: #FFFFFF;          /* raised surfaces */
+  --panel: #FFFFFF;
+  --panel2: #F4EFE8;
+  --cream: #24211C;        /* primary text — inverted */
+  --mut: #6B6259;          /* secondary text, AA on the page background */
+  --line: #E4DCD1;
+
+  /* Bright gold fails contrast as text on white, so text-gold darkens while
+     the fill gradient stays rich. */
+  --gold: #8A6D14;
+  --gold-l: #C9A227;
+  --gold-d: #6E560F;
+  --grad: linear-gradient(135deg, #B8901C, #E3C25C 45%, #C9A227);
+  --on-gold: #1A1403;
+
+  --header-bg: rgba(251, 248, 244, .86);
+  --header-bg-solid: rgba(251, 248, 244, .97);
+  --overlay: rgba(36, 33, 28, .45);
+  --scrim-strong: rgba(36, 33, 28, .55);
+  --img-veil: linear-gradient(to top, rgba(20, 18, 15, .78), transparent 62%);
+  --mmenu-bg: rgba(251, 248, 244, .98);
+
+  --shadow: 0 10px 34px -14px rgba(36, 33, 28, .22);
+  --shadow-g: 0 14px 40px -16px rgba(138, 109, 20, .28);
+
+  --ok: #2F7D55;
+  --warn: #9A6B12;
+  --bad: #A83A33;
+  --info: #2F5F8F;
+}
+
+/* Product and hero imagery was shot on dark backgrounds; a slight lift stops
+   it looking like a hole punched in a light page. */
+[data-theme="light"] .card-img img,
+[data-theme="light"] .col img { filter: brightness(1.02); }
+[data-theme="light"] .col:hover img { filter: brightness(1.06); }
+
+/* The logo artwork is light-on-transparent, so it vanishes on a light
+   background. Applies to the storefront header, the footer and the admin
+   sidebar, which all reuse .logo. */
+[data-theme="light"] .logo img,
+[data-theme="light"] .side .logo img { filter: invert(1) brightness(.25); }
+
+/* Marquee and footer inherit the panel tone rather than pure black. */
+[data-theme="light"] .marquee { background: var(--panel2); }
+
+/* The "Verified buyer" pill measured 4.29:1 in light mode — just under the 4.5
+   AA floor for small text. Darkened to clear it. */
+[data-theme="light"] .rev-top .v { color: var(--gold-d); }
+
+/* --- the toggle itself ----------------------------------------------------
+   In the admin the button is a .btn (which sets colour for text labels), but
+   its content is an icon — so the stroke must be set explicitly or it inherits
+   a colour that disappears against the button fill. */
+.theme-btn { position: relative; }
+.theme-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  transition: opacity .2s var(--ease), transform .3s var(--ease);
+}
+.abar-actions .theme-btn { color: var(--gold); padding: 9px 12px; }
+.abar-actions .theme-btn:hover { color: var(--on-gold); }
+.theme-btn .icon-sun { display: none; }
+[data-theme="light"] .theme-btn .icon-moon { display: none; }
+[data-theme="light"] .theme-btn .icon-sun { display: block; }
+
+/* Honour the OS setting for anyone who has asked for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  .theme-btn svg { transition: none; }
+}
+
+/* Destructive actions in Settings — visually distinct so nobody clicks
+   "Erase everything" while looking for "Save". */
+.danger-title { color: var(--bad); }
+.danger-title + p { color: var(--mut); }
+.pane-actions { display: flex; gap: var(--sp-sm); flex-wrap: wrap; }
+.linkish {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--gold);
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Empty review state. Shown while the store has no genuine reviews: better an
+   honest blank than invented names with "Verified buyer" badges, which is both
+   the clearest tell of a generated site and a DMCC Act 2024 problem. */
+.rev-empty {
+  border: 1px dashed var(--line);
+  border-radius: var(--r-md);
+  padding: clamp(24px, 5vw, 40px);
+  text-align: center;
+  max-width: 620px;
+  margin: 0 auto;
+}
+.rev-empty h2 { font-size: var(--fs-6xl); margin-bottom: var(--sp-md); }
+.rev-empty p { color: var(--mut); margin-bottom: var(--sp-sm); }
+
+/* With no reviews yet the score panel is omitted, so the two-column grid would
+   leave the review form crushed into the leftover 1fr track. Collapse to a
+   single centred column instead. */
+.rev-head:not(:has(.rev-score)) {
+  grid-template-columns: 1fr;
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+/* =============================================================================
+   PRODUCT CARD — even heights and a hover worth noticing
+   -----------------------------------------------------------------------------
+   Two problems, measured on the shop grid:
+
+   1. Ragged rows. Cards in the same row came out 330px and 321px on mobile,
+      because a tagline that wraps to two lines makes that card taller. The grid
+      already stretches the cards, but .card was not a flex column, so the body
+      could not absorb the difference — the gap fell under the button instead.
+
+   2. Dead hover. Only the image swapped and the frame tinted gold. Nothing
+      lifted, nothing cast a shadow, so on a fast connection the card felt
+      unresponsive — especially on a light background where a gold hairline is
+      easy to miss.
+   ========================================================================== */
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: transform .35s var(--ease), box-shadow .35s var(--ease);
+}
+
+.card-body {
+  flex: 1 1 auto;          /* absorbs the difference so buttons align */
+}
+
+/* Only lift on devices that actually hover. On a phone :hover sticks after a
+   tap, which would leave a card floating until you touched something else. */
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    transform: translateY(-6px);
+    /* --shadow is tuned for dark backgrounds and nearly vanishes on cream, so
+       light mode gets its own, warmer and more visible. */
+    box-shadow: 0 18px 40px -20px rgba(0, 0, 0, .55);
+  }
+  .card:hover .card-add {
+    background: var(--grad);
+    color: var(--on-gold);
+    border-color: transparent;
+  }
+}
+
+[data-theme="light"] .card:hover,
+[data-theme="light"] .card:focus-within {
+  box-shadow: 0 16px 36px -18px rgba(90, 72, 40, .45);
+}
+
+/* Keyboard users get the same affordance. */
+.card:focus-within {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px -20px rgba(0, 0, 0, .55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card, .card-img img { transition: none; }
+  .card:hover, .card:focus-within { transform: none; }
 }

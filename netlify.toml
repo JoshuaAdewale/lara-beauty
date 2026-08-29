@@ -3,7 +3,12 @@
 
 [build]
   publish = "."
-  command = ""
+  # Netlify runs this on every deploy and on every build-hook ping. It pulls the
+  # live published catalogue and reviews, then regenerates the HTML and the
+  # JSON-LD so what Google reads always matches what shoppers see.
+  # Falls back to data.js if the API is unreachable, so it can never hard-fail.
+  command = "node build-live.cjs"
+  functions = "netlify/functions"
 
 # ---------------------------------------------------------------
 # Security headers (applied site-wide)
@@ -14,7 +19,18 @@
     X-Frame-Options = "SAMEORIGIN"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=(), payment=(self)"
+    # Force HTTPS for two years. Netlify serves HTTPS already; this stops a
+    # downgrade on the first request over a hostile network.
+    Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
+    # Content Security Policy. This is the seatbelt: even if a script tag were
+    # ever injected into a page, the browser refuses to run it and refuses to
+    # send data to a domain not listed here.
+    #   'unsafe-inline' for styles only — the design uses inline style values
+    #   for progress bars. Scripts do NOT get it, so injected <script> and
+    #   onerror= handlers are blocked outright.
+    #   js.paystack.co is needed once you switch payments on.
+    Content-Security-Policy = "default-src 'self'; script-src 'self' https://js.paystack.co 'sha256-mmqyIzZ9WxQvWNGzZ3AtYNr8qgnku4A487AJIIkF5L8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://api.paystack.co; frame-src https://checkout.paystack.com; form-action 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'"
 
 # Keep the staff portal out of search engines and caches
 [[headers]]
@@ -22,6 +38,10 @@
   [headers.values]
     X-Robots-Tag = "noindex, nofollow, noarchive"
     Cache-Control = "no-store, max-age=0"
+    # The admin renders customer-supplied text (order names, enquiries), so it
+    # gets the strictest policy of any page and must never be framed.
+    X-Frame-Options = "DENY"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'sha256-mmqyIzZ9WxQvWNGzZ3AtYNr8qgnku4A487AJIIkF5L8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'"
 
 [[headers]]
   for = "/admin.js"
@@ -65,8 +85,42 @@
   to = "/index.html"
   status = 200
 
-# Anything unmatched falls back to the storefront (hash routing)
+# The API must be matched BEFORE the catch-all below, otherwise every call
+# returns index.html and the client sees "bad-response".
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = true
+
+# Never cache API responses
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Cache-Control = "no-store, max-age=0"
+
+# ---------------------------------------------------------------
+# Internal documentation must never be served.
+# These .md files are deployment notes, not web pages. Netlify publishes every
+# file in the folder, so without this rule /LAUNCH-TODAY.md and friends are
+# readable by anyone — which leaked the admin password once already.
+# Placed BEFORE the catch-all so it wins.
+# ---------------------------------------------------------------
+[[redirects]]
+  from = "/*.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+# Anything unmatched serves the 404 page with a REAL 404 status.
+#
+# This used to rewrite to /index.html with status 200, a leftover from the old
+# hash-routed prototype. On a multi-page site that is a soft 404: every typo,
+# every dead backlink, every crawler-invented URL returns a full copy of the
+# homepage with HTTP 200, so Google indexes unlimited duplicate homepages and
+# reports "Soft 404" / "Duplicate without user-selected canonical". The site is
+# 34 real files now; nothing needs a client-side fallback.
 [[redirects]]
   from = "/*"
-  to = "/index.html"
-  status = 200
+  to = "/404.html"
+  status = 404

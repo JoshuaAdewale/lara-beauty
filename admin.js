@@ -1,11 +1,33 @@
 /* Lara Beauty Atelier — admin portal */
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
-/* Staff accounts. Replace with a real server-side auth check in production. */
+/* -----------------------------------------------------------------------------
+   Staff accounts.
+
+   READ THIS BEFORE YOU GO LIVE.
+
+   These passwords are in a file the whole world can download. Anyone who opens
+   admin.js sees them. They are NOT a security control — they only stop a casual
+   passer-by clicking around, and you must change them from the defaults.
+
+   The real boundary is the ADMIN_TOKEN publishing key, which lives only in your
+   Netlify environment variables and is checked on the server. Someone who gets
+   past this login can look at demo data in their own browser; they still cannot
+   publish anything, change a price, or read your customer list, because every
+   one of those goes through the server and is refused without the token.
+
+   So: treat the password as the lock on a display cabinet and ADMIN_TOKEN as
+   the lock on the safe. Change both, keep the token secret, and never reuse a
+   password you use anywhere else.
+   -------------------------------------------------------------------------- */
 const STAFF = [
   { u: 'admin@larabeauty.ng', p: 'lara2026', name: 'Lara', role: 'owner' },
   { u: 'staff@larabeauty.ng', p: 'atelier26', name: 'Store staff', role: 'staff' }
 ];
+
+/* Nag until the shipped defaults are changed. */
+const DEFAULT_PASSWORDS = ['lara2026', 'atelier26'];
+const usingDefaultPassword = () => STAFF.some(a => DEFAULT_PASSWORDS.includes(a.p));
 const SESSION_MS = 60 * 60 * 1000;   // auto sign-out after 1 hour idle
 const MAX_TRIES = 5;
 let session = null;
@@ -29,7 +51,7 @@ function lockState() {
   return DB.read('lba_lock', { n: 0, until: 0 });
 }
 
-function handleLogin(event) {
+async function handleLogin(event) {
   event.preventDefault();
 
   const lock = lockState();
@@ -39,9 +61,43 @@ function handleLogin(event) {
 
   const email = $('#login-email').value.trim().toLowerCase();
   const password = $('#login-password').value;
+  const btn = $('.login-submit');
+  const label = btn ? btn.textContent : '';
+
+  /* Preferred path: the server checks the password against an environment
+     variable and hands back the publishing token. Nothing secret sits in this
+     file, and staff no longer paste a long key by hand. */
+  if (API.enabled) {
+    if (btn) { btn.disabled = true; btn.textContent = 'Signing in…'; }
+    try {
+      const res = await API.login(password);
+      if (btn) { btn.disabled = false; btn.textContent = label; }
+      API.setToken(res.token || '');
+      DB.write('lba_lock', { n: 0, until: 0 });
+      DB.write(DB.k.a, { at: Date.now(), u: email || res.name, name: res.name, role: res.role });
+      showApp();
+      return;
+    } catch (err) {
+      if (btn) { btn.disabled = false; btn.textContent = label; }
+      /* 'not-configured' means the owner has not set ADMIN_PASSWORD yet, so
+         fall through to the legacy in-file check. Any other error is a genuine
+         rejection and must stop here. */
+      if (err.message !== 'not-configured' && err.message !== 'api-not-deployed'
+          && err.message !== 'offline') {
+        $('#login-password').value = '';
+        return toast(err.message || 'Sign-in failed');
+      }
+    }
+  }
+
+  /* Legacy fallback: passwords in this file. Only reachable before the server
+     side is configured, and the dashboard nags until it is. */
   const account = STAFF.find(s => s.u === email && s.p === password);
 
   if (account) {
+    /* Keep the publishing key for this tab only. */
+    const token = $('#login-token') ? $('#login-token').value.trim() : '';
+    API.setToken(token);
     DB.write('lba_lock', { n: 0, until: 0 });
     DB.write(DB.k.a, {
       at: Date.now(), u: account.u, name: account.name, role: account.role
@@ -121,6 +177,11 @@ function showApp() {
   $('#app').hidden = false;
   $('#who').textContent = `${session.name} · ${session.role}`;
   refreshMsgBadge();
+  /* Warm the shared inbox so the unread badge is accurate straight away. */
+  loadLiveMessages().then(refreshMsgBadge);
+  /* Adopt the live catalogue before the first view renders, otherwise staff
+     would briefly edit the build-time data and overwrite live prices. */
+  loadLiveStore().then(() => { renderPublishBar(); nav(view); });
   nav(location.hash.replace('#', '') || 'dash');
 }
 
@@ -154,8 +215,21 @@ function closeModal2() {
 /* -----------------------------------------------------------------------------
    Global event delegation — replaces inline onclick attributes
    -------------------------------------------------------------------------- */
+function applyTheme(theme) {
+  const light = theme === 'light';
+  document.documentElement.setAttribute('data-theme', light ? 'light' : 'dark');
+  try { localStorage.setItem('lba_theme', light ? 'light' : 'dark'); } catch (e) {}
+}
+
+function toggleTheme() {
+  const now = document.documentElement.getAttribute('data-theme') === 'light';
+  applyTheme(now ? 'dark' : 'light');
+  toast(now ? 'Dark theme' : 'Light theme');
+}
+
 const ADMIN_ACTIONS = {
-  'logout': logout,
+  'theme': () => toggleTheme(),
+  'logout': () => { API.setToken(''); logout(); },
   'export-csv': () => exportCSV(),
   'new-product': () => editProduct(),
   'close-modal': closeModal,
@@ -190,6 +264,8 @@ const COMMANDS = {
   'msg:toggle': d => toggleMsgRead(d.arg),
   'msg:delete': d => deleteMsg(d.arg),
   'msg:read-all': () => markAllRead(),
+  'subs:refresh': async () => { await loadLiveSubs(); vMarketing(); toast('Subscribers refreshed'); },
+  'msg:refresh': async () => { await loadLiveMessages(); await vMessages(); toast('Inbox refreshed'); },
   'msg:export': () => exportMessages(),
 
   /* orders */
@@ -225,8 +301,26 @@ const COMMANDS = {
   },
 
   /* reviews */
-  'review:approve': d => approveRev(d.arg, Number(d.arg2)),
-  'review:delete': d => delRev(d.arg, Number(d.arg2)),
+  'review:approve': d => approveRev(d.arg, d.arg2),
+  'review:delete': d => delRev(d.arg, d.arg2),
+  'review:new': () => editReview(),
+  'review:edit': d => editReview(d.arg, d.arg2),
+  'review:seed': () => seedLiveReviews(),
+  'review:refresh': async () => { await loadLiveReviews(); await vReviews(); toast('Refreshed'); },
+  'review:filter': d => { revFilter = d.arg; vReviews(); },
+  'review:export': () => exportReviews(),
+
+  /* live publishing */
+  'live:publish': () => publishLive(),
+  'live:discard': () => discardDraft(),
+  'live:rollback': () => rollbackLive(),
+  'live:review': () => reviewChanges(),
+
+  /* outbound mail */
+  'mail:compose': () => composeMail(),
+  'mail:reply': d => replyTo(d.arg),
+  'mail:template': d => applyTemplate(d.value),
+  'mail:to': d => composeMail({ to: d.arg }),
 
   /* content editor */
   'content:save': d => SAVERS[d.arg]?.(),
@@ -246,6 +340,9 @@ const COMMANDS = {
   /* settings & data */
   'settings:save': () => saveSet(),
   'data:reset': () => resetAll(),
+  'data:backup': () => backupAll(),
+  'data:restore': () => $('#restore-file').click(),
+  'data:wipe': d => wipeData(d.arg),
   'export:csv': () => exportCSV(),
   'export:json': () => exportJSON(),
   'export:subs': () => exportSubs()
@@ -274,12 +371,30 @@ document.addEventListener('click', event => {
 
 document.addEventListener('change', event => {
   if (event.target.id === 'media-input') uploadImgs(event.target);
+  if (event.target.id === 'restore-file' && event.target.files[0]) {
+    restoreFromFile(event.target.files[0]);
+    event.target.value = '';
+  }
+  const statusSel = event.target.closest('[data-status-ref]');
+  if (statusSel) setStatus(statusSel.dataset.statusRef, statusSel.value);
+  if (event.target.hasAttribute && event.target.hasAttribute('data-append-img')) {
+    appendImg(event.target.value);
+  }
+  const stockField = event.target.closest('[data-stock-pid]');
+  if (stockField) {
+    setStock(stockField.dataset.stockPid, Number(stockField.dataset.stockIdx), stockField.value);
+  }
   const sel = event.target.closest('[data-cmd-change]');
   if (sel) COMMANDS[sel.dataset.cmdChange]?.({ ...sel.dataset, value: sel.value });
 });
 
 document.addEventListener('submit', event => {
   if (event.target.id === 'login-form') handleLogin(event);
+  if (event.target.id === 'product-form') {
+    saveProduct(event, event.target.dataset.productId || '');
+  }
+  if (event.target.id === 'review-form') saveReview(event);
+  if (event.target.id === 'compose-form') submitCompose(event);
 });
 
 document.addEventListener('click', event => {
@@ -348,11 +463,49 @@ function nav(v) {
     btn.classList.toggle('on', btn.dataset.view === v));
   $('#view-title').textContent = TITLES[v][0];
   $('#view-sub').textContent = TITLES[v][1];
+  renderBarActions(v);
+  renderSecurityNotice();
   $('#sidebar').classList.remove('on');
   ({ dash: vDash, orders: vOrders, messages: vMessages, pages: vPages, categories: vCategories, media: vMedia,
      products: vProducts, inventory: vInventory, customers: vCustomers,
      reviews: vReviews, marketing: vMarketing, analytics: vAnalytics, settings: vSettings })[v]();
   scrollTo(0, 0);
+}
+
+/* The header buttons used to be fixed markup, so "＋ New product" showed up
+   on the Reviews and Messages screens where it did nothing useful. */
+const BAR_ACTIONS = {
+  orders: `<button type="button" class="btn btn-ghost btn-sm" data-action="export-csv">Export CSV</button>`,
+  products: `<button type="button" class="btn btn-primary btn-sm" data-action="new-product">+ New product</button>`,
+  inventory: `<button type="button" class="btn btn-primary btn-sm" data-action="new-product">+ New product</button>`,
+  reviews: `<button type="button" class="btn btn-ghost btn-sm" data-cmd="review:export">Export for data.js</button>
+            <button type="button" class="btn btn-primary btn-sm" data-cmd="review:new">+ Write review</button>`,
+  messages: `<button type="button" class="btn btn-ghost btn-sm" data-cmd="msg:export">Export CSV</button>
+             <button type="button" class="btn btn-primary btn-sm" data-cmd="mail:compose">+ Compose email</button>`,
+  customers: `<button type="button" class="btn btn-primary btn-sm" data-cmd="mail:compose">+ Compose email</button>`
+};
+
+function renderBarActions(v) {
+  const bar = $('#abar-actions');
+  if (bar) bar.innerHTML = BAR_ACTIONS[v] || '';
+}
+
+/* A banner staff cannot miss, rather than a line in a README nobody opens. */
+function renderSecurityNotice() {
+  const host = $('#security-notice');
+  if (!host) return;
+  const problems = [];
+  if (usingDefaultPassword()) {
+    problems.push('The staff password is still the one this site shipped with. Anyone who reads <code>admin.js</code> knows it. Change it in <code>admin.js</code> and redeploy.');
+  }
+  if (API.enabled && !API.token()) {
+    problems.push('No publishing key entered, so nothing you change here can go live. Sign out and back in, and paste the key.');
+  }
+  host.hidden = problems.length === 0;
+  host.innerHTML = problems.length
+    ? `<div class="pane attention-panel"><h3 class="attention-title">Security</h3>
+       ${problems.map(p => `<p class="muted">${p}</p>`).join('')}</div>`
+    : '';
 }
 
 /* ---------- dashboard ---------- */
@@ -393,12 +546,12 @@ function vDash() {
     <div class="pane"><div class="ph"><h3>Recent orders</h3><button class="btn btn-ghost btn-sm" data-cmd="go" data-arg="orders">View all</button></div>
       <div class="tablewrap"><table><thead><tr><th>Ref</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead><tbody>
         ${ORDERS.slice(0, 6).map(o => `<tr class="u-clickable" data-cmd="order:view" data-arg="${o.ref}">
-          <td class="gold">${o.ref}</td><td>${o.name}<br><small class="muted">${fdate(o.date)}</small></td>
+          <td class="gold">${esc(o.ref)}</td><td>${esc(o.name)}<br><small class="muted">${fdate(o.date)}</small></td>
           <td>${money(o.total)}</td><td><span class="st ${o.status}">${o.status}</span></td></tr>`).join('')}
       </tbody></table></div></div>
     <div class="pane"><div class="ph"><h3>Top products</h3><button class="btn btn-ghost btn-sm" data-cmd="go" data-arg="analytics">Details</button></div>
       <div class="tablewrap"><table><thead><tr><th>Product</th><th>Units</th><th>Revenue</th></tr></thead><tbody>
-        ${productStats().slice(0, 6).map(s => `<tr><td><div class="tprod"><img src="${s.p.images[0]}" alt=""><div><b>${s.p.name}</b><small>${s.p.sku || ''}</small></div></div></td>
+        ${productStats().slice(0, 6).map(s => `<tr><td><div class="tprod"><img src="${s.p.images[0]}" alt=""><div><b>${esc(s.p.name)}</b><small>${s.p.sku || ''}</small></div></div></td>
           <td>${s.units}</td><td class="gold">${money(s.rev)}</td></tr>`).join('')}
       </tbody></table></div></div>
   </div>`;
@@ -448,10 +601,10 @@ function vOrders() {
     <tbody>${list.length ? list.map(o => `<tr>
       <td class="gold u-clickable" data-cmd="order:view" data-arg="${o.ref}">${o.ref}</td>
       <td class="muted">${fdate(o.date)}</td>
-      <td><b class="u-medium">${o.name}</b><br><small class="muted">${o.state}</small></td>
+      <td><b class="u-medium">${esc(o.name)}</b><br><small class="muted">${esc(o.state)}</small></td>
       <td>${orderUnits(o)}</td><td>${money(o.total)}</td>
-      <td class="muted u-capitalize">${o.pay}</td>
-      <td><select class="mini" onchange="setStatus('${o.ref}',this.value)">
+      <td class="muted u-capitalize">${esc(o.pay)}</td>
+      <td><select class="mini" data-status-ref="${esc(o.ref)}">
         ${['pending','processing','shipped','delivered','cancelled'].map(s => `<option ${o.status === s ? 'selected' : ''}>${s}</option>`).join('')}</select></td>
       <td><button class="ico" data-cmd="order:view" data-arg="${o.ref}" title="View"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
           <button class="ico del" data-cmd="order:delete" data-arg="${o.ref}" title="Delete"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg></button></td>
@@ -465,10 +618,10 @@ function viewOrder(ref) {
   openModal(`<div class="mhead"><h3>Order ${o.ref}</h3><button type="button" class="icon-btn" data-action="close-modal" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <div class="modal-order-meta"><span class="st ${o.status}">${o.status}</span><span class="muted">${fdate(o.date)}</span><span class="muted u-capitalize">${o.pay}</span></div>
     <div class="f-grid modal-grid">
-      <div><small class="muted">Customer</small><p>${o.name}<br>${o.email}<br>${o.phone}</p></div>
+      <div><small class="muted">Customer</small><p>${esc(o.name)}<br>${esc(o.email)}<br>${esc(o.phone)}</p></div>
       <div><small class="muted">Deliver to</small><p>${o.addr}<br>${o.state}${o.note ? '<br><em>' + o.note + '</em>' : ''}</p></div></div>
     ${o.items.map(l => { const p = P(l.id); return p ? `<div class="sum-item"><img src="${p.images[0]}" alt="">
-      <div><b class="u-medium">${p.name}</b><div class="q">${l.v ? l.v + ' · ' : ''}Qty ${l.q}</div></div><span>${money(p.price * l.q)}</span></div>` : ''; }).join('')}
+      <div><b class="u-medium">${esc(p.name)}</b><div class="q">${l.v ? esc(l.v) + ' · ' : ''}Qty ${l.q}</div></div><span>${money(p.price * l.q)}</span></div>` : ''; }).join('')}
     <div class="u-mt-lg">
       <div class="row"><span>Subtotal</span><span>${money(o.sub)}</span></div>
       <div class="row"><span>Delivery</span><span>${o.ship ? money(o.ship) : 'Free'}</span></div>
@@ -488,7 +641,7 @@ function vProducts() {
   <div class="pane"><div class="tablewrap"><table>
     <thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Compare</th><th>Stock</th><th>Rating</th><th></th></tr></thead>
     <tbody>${list.map(p => `<tr>
-      <td><div class="tprod"><img src="${p.images[0]}" alt=""><div><b>${p.name}</b><small>${p.sku || ''}</small></div></div></td>
+      <td><div class="tprod"><img src="${p.images[0]}" alt=""><div><b>${esc(p.name)}</b><small>${esc(p.sku || '')}</small></div></div></td>
       <td class="muted">${CATEGORIES.find(c => c.id === p.cat)?.label || p.cat}</td>
       <td class="gold">${money(p.price)}</td><td class="muted">${p.compare ? money(p.compare) : '—'}</td>
       <td>${stockPill(p)}</td><td>${p.rating.toFixed(1)} ★</td>
@@ -508,11 +661,11 @@ function editProduct(id) {
     tone: [], images: ['assets/logo-transparent.png'], variants: [], desc: '', details: [], how: '', reviews: [] };
   openModal(`<div class="mhead"><h3>${id ? 'Edit' : 'New'} product</h3>
     <button type="button" class="icon-btn" data-action="close-modal" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
-  <form onsubmit="saveProduct(event,'${id || ''}')">
+  <form id="product-form" data-product-id="${id || ''}">
     <div class="f-grid">
-      <div class="f"><label>Name</label><input name="name" value="${p.name}" required></div>
-      <div class="f"><label>SKU</label><input name="sku" value="${p.sku || ''}"></div>
-      <div class="f full"><label>Tagline</label><input name="tagline" value="${p.tagline}"></div>
+      <div class="f"><label>Name</label><input name="name" value="${esc(p.name)}" required></div>
+      <div class="f"><label>SKU</label><input name="sku" value="${esc(p.sku || '')}"></div>
+      <div class="f full"><label>Tagline</label><input name="tagline" value="${esc(p.tagline)}"></div>
       <div class="f"><label>Category</label><select name="cat">${CATEGORIES.map(c => `<option value="${c.id}" ${p.cat === c.id ? 'selected' : ''}>${c.label}</option>`).join('')}</select></div>
       <div class="f"><label>Badge</label><input name="badge" value="${p.badge || ''}" placeholder="Bestseller"></div>
       <div class="f"><label>Price (₦)</label><input name="price" type="number" value="${p.price}" required></div>
@@ -521,12 +674,12 @@ function editProduct(id) {
       <div class="f"><label>Rating</label><input name="rating" type="number" step="0.1" max="5" min="0" value="${p.rating}"></div>
       <div class="f full"><label>Images (comma-separated paths)</label>
         <div class="inline-field">
-          <input name="images" id="pimgs" value="${p.images.join(', ')}" class="u-grow">
+          <input name="images" id="pimgs" value="${esc(p.images.join(', '))}" class="u-grow">
           <button type="button" class="btn btn-ghost btn-sm" data-cmd="media:pick" data-arg="pimgs-add">+ Add</button>
-        </div><input type="hidden" id="pimgs-add" onchange="appendImg(this.value)"></div>
+        </div><input type="hidden" id="pimgs-add" data-append-img></div>
       <div class="f full"><label>Variants — one per line: <em>label | price | stock</em></label>
-        <textarea name="variants" rows="3">${(p.variants || []).map(v => `${v.label} | ${v.price} | ${v.stock}`).join('\n')}</textarea></div>
-      <div class="f full"><label>Description</label><textarea name="desc" rows="3">${p.desc}</textarea></div>
+        <textarea name="variants" rows="3">${esc((p.variants || []).map(v => `${v.label} | ${v.price} | ${v.stock}`).join('\n'))}</textarea></div>
+      <div class="f full"><label>Description</label><textarea name="desc" rows="3">${esc(p.desc)}</textarea></div>
       <div class="f full"><label>Key details (one per line)</label><textarea name="details" rows="3">${p.details.join('\n')}</textarea></div>
       <div class="f full"><label>How to use</label><textarea name="how" rows="2">${p.how}</textarea></div>
       <div class="f full"><label>Skin tags (comma-separated)</label><input name="tone" value="${p.tone.join(', ')}"></div>
@@ -549,6 +702,14 @@ function saveProduct(e, id) {
     variants, desc: d.desc, details: d.details.split('\n').filter(Boolean),
     how: d.how, tone: d.tone.split(',').map(x => x.trim()).filter(Boolean)
   };
+  /* A single-variant product shows p.price on the card but charges the
+     variant price at checkout. Letting them drift is how a shopper gets
+     quoted one number and billed another, so keep them in step. */
+  if (obj.variants.length === 1) {
+    if (obj.variants[0].price !== obj.price) obj.variants[0].price = obj.price;
+    if (obj.eur != null && obj.variants[0].eur == null) obj.variants[0].eur = obj.eur;
+  }
+
   if (id) Object.assign(P(id), obj);
   else PRODUCTS.push(Object.assign({ id: d.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'p' + Date.now(), reviews: [] }, obj));
   saveProducts(); closeModal(); vProducts(); toast('Product saved');
@@ -580,9 +741,12 @@ function vInventory() {
     ${rows.map(r => { const st = r.v ? r.v.stock : (r.p.stock || 0);
       const cls = st <= 0 ? 'cancelled' : st <= SETTINGS.lowStock ? 'pending' : 'delivered';
       const lbl = st <= 0 ? 'Out of stock' : st <= SETTINGS.lowStock ? 'Low' : 'Healthy';
-      return `<tr><td><div class="tprod"><img src="${r.p.images[0]}" alt=""><div><b>${r.p.name}</b><small>${r.p.sku || ''}</small></div></div></td>
-        <td class="muted">${r.v ? r.v.label : 'Default'}</td><td class="gold">${money(r.v ? r.v.price : r.p.price)}</td>
-        <td><input class="mini stock-input" type="number" value="${st}" onchange="setStock('${r.p.id}',${r.i},this.value)"></td>
+      /* data-* + a delegated change handler, not inline onchange: a product id
+         containing a quote would otherwise break out of the attribute. */
+      return `<tr><td><div class="tprod"><img src="${esc(r.p.images[0])}" alt=""><div><b>${esc(r.p.name)}</b><small>${esc(r.p.sku || '')}</small></div></div></td>
+        <td class="muted">${r.v ? esc(r.v.label) : 'Default'}</td><td class="gold">${money(r.v ? r.v.price : r.p.price)}</td>
+        <td><input class="mini stock-input" type="number" value="${st}"
+                   data-stock-pid="${esc(r.p.id)}" data-stock-idx="${r.i}"></td>
         <td><span class="st ${cls}">${lbl}</span></td></tr>`; }).join('')}
   </tbody></table></div></div>`;
 }
@@ -602,45 +766,365 @@ function vCustomers() {
     ${kpi('Avg. lifetime value', money(cs.length ? sum(cs.map(c => c.spend)) / cs.length : 0), null, 'M12 3v18M8 7h6a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h6')}
   </div>
   <div class="pane"><div class="tablewrap"><table>
-    <thead><tr><th>Customer</th><th>Location</th><th>Orders</th><th>Lifetime spend</th><th>Last order</th><th>Segment</th></tr></thead>
+    <thead><tr><th>Customer</th><th>Location</th><th>Orders</th><th>Lifetime spend</th><th>Last order</th><th>Segment</th><th></th></tr></thead>
     <tbody>${cs.map(c => `<tr>
-      <td><b class="u-medium">${c.name}</b><br><small class="muted">${c.email}</small></td>
-      <td class="muted">${c.state}</td><td>${c.orders}</td><td class="gold">${money(c.spend)}</td>
+      <td><b class="u-medium">${esc(c.name)}</b><br><small class="muted">${esc(c.email)}</small></td>
+      <td class="muted">${esc(c.state)}</td><td>${c.orders}</td><td class="gold">${money(c.spend)}</td>
       <td class="muted">${fdate(c.last)}</td>
       <td><span class="st ${c.spend > 40000 ? 'delivered' : c.orders > 1 ? 'shipped' : 'processing'}">${c.spend > 40000 ? 'VIP' : c.orders > 1 ? 'Repeat' : 'New'}</span></td>
+      <td class="u-nowrap"><button class="ico" title="Email this customer" data-cmd="mail:to" data-arg="${esc(c.email)}">
+        <svg viewBox="0 0 24 24"><path d="M3 6h18v12H3z"/><path d="m3 7 9 6 9-6"/></svg></button></td>
     </tr>`).join('')}</tbody></table></div></div>`;
 }
 
-/* ---------- reviews ---------- */
-function vReviews() {
-  const all = PRODUCTS.flatMap(p => p.reviews.map((r, i) => ({ p, r, i })));
+/* ---------- reviews -----------------------------------------------------------
+   Staff can write, edit, approve and delete reviews here.
+
+   IMPORTANT — how a review reaches a real visitor:
+   Product pages are static HTML generated by build.js from data.js. Anything
+   saved here lives in THIS browser's localStorage only. To publish, use
+   "Export for data.js" and paste the block into data.js, then rebuild. The
+   banner at the top of this view says so, because forgetting is the single
+   easiest way to think you have published something you have not.
+   -------------------------------------------------------------------------- */
+let revFilter = 'all';
+
+/* Live reviews from /api/reviews. Null until the first load resolves, so the
+   view can tell "not loaded yet" apart from "loaded and empty". */
+let LIVE_REVIEWS = null;
+let liveError = '';
+
+function allReviews() {
+  if (LIVE_REVIEWS) {
+    return Object.entries(LIVE_REVIEWS).flatMap(([pid, list]) =>
+      list.map(r => ({ p: P(pid) || { id: pid, name: pid, images: ['assets/logo-transparent.png'] }, r })));
+  }
+  /* Fallback: the seed reviews baked into data.js. */
+  return PRODUCTS.flatMap(p => p.reviews.map((r, i) => ({ p, r, i })));
+}
+
+async function loadLiveReviews() {
+  if (!API.enabled) { liveError = 'offline'; return; }
+  try {
+    const data = await API.getAllReviews();
+    LIVE_REVIEWS = data.reviews || {};
+    liveError = '';
+  } catch (err) {
+    LIVE_REVIEWS = null;
+    liveError = err.message;
+  }
+}
+
+async function vReviews() {
+  if (LIVE_REVIEWS === null && !liveError) {
+    $('#view').innerHTML = '<div class="pane"><p class="muted">Loading reviews…</p></div>';
+    await loadLiveReviews();
+  }
+  const live = !!LIVE_REVIEWS;
+  const all = allReviews();
   const pend = all.filter(x => x.r.ok === false);
+  const staffWritten = all.filter(x => x.r.src === 'staff');
+  const list = revFilter === 'all' ? all
+    : revFilter === 'pending' ? pend
+    : revFilter === 'published' ? all.filter(x => x.r.ok !== false)
+    : all.filter(x => x.r.src === 'staff');
+
   $('#view').innerHTML = `
-  <div class="kpis cols-3">
+  ${live ? `<div class="pane live-panel">
+    <h3 class="live-title">Live — publishing straight to the storefront</h3>
+    <p class="muted">Reviews you approve here appear for real visitors within seconds. No
+      rebuild, no export. Shoppers' own submissions land here as <b>Pending</b>.</p>
+  </div>`
+  : `<div class="pane attention-panel">
+    <h3 class="attention-title">Not connected to the live store${liveError === 'offline' ? '' : ` (${esc(liveError)})`}</h3>
+    <p class="muted">${liveError === 'offline'
+      ? 'You are viewing this from a local file or a plain static server, so there are no functions behind it. Deploy to Netlify to publish reviews instantly.'
+      : liveError === 'unauthorised'
+        ? 'Your admin token was rejected. Sign out and back in, and check ADMIN_TOKEN in Netlify → Site settings → Environment variables.'
+        : liveError === 'api-not-deployed'
+          ? 'The /api/reviews function is not deployed yet. Push the netlify/functions folder and redeploy.'
+          : 'Showing the reviews baked into data.js. Changes here will not reach visitors.'}</p>
+    <p class="muted">See <code>LIVE-SETUP.md</code> for the five-minute fix.</p>
+  </div>`}
+
+  <div class="kpis cols-4">
     ${kpi('Total reviews', all.length, null, 'm12 3 2.6 5.6 6 .7-4.4 4 1.2 6L12 16.4')}
     ${kpi('Awaiting approval', pend.length, null, 'M12 7v5l3 3')}
     ${kpi('Average rating', (all.length ? sum(all.map(x => x.r.r)) / all.length : 0).toFixed(2) + ' ★', null, 'M12 3v18')}
+    ${kpi('Added by staff', staffWritten.length, null, 'M12 5v14M5 12h14')}
   </div>
+
+  <div class="toolbar">
+    ${[['all', 'All'], ['pending', 'Pending'], ['published', 'Published'], ['staff', 'Staff-added']]
+      .map(([k, label]) => `<button class="chip ${revFilter === k ? 'on' : ''}"
+        data-cmd="review:filter" data-arg="${k}">${label}${k === 'all' ? '' : ` (${
+          k === 'pending' ? pend.length
+          : k === 'published' ? all.filter(x => x.r.ok !== false).length
+          : staffWritten.length})`}</button>`).join('')}
+    <span class="toolbar-right">
+      ${live ? '<button class="btn btn-ghost btn-sm" data-cmd="review:refresh">Refresh</button>' : ''}
+      ${live && !all.length ? '<button class="btn btn-ghost btn-sm" data-cmd="review:seed">Import from data.js</button>' : ''}
+      <button class="btn btn-ghost btn-sm" data-cmd="review:export">Export for data.js</button>
+      <button class="btn btn-primary btn-sm" data-cmd="review:new">+ Write review</button>
+    </span>
+  </div>
+
   <div class="pane"><div class="ph"><h3>All reviews</h3><p>Approve to publish on the storefront</p></div>
   <div class="tablewrap"><table><thead><tr><th>Product</th><th>Reviewer</th><th>Rating</th><th>Review</th><th>Status</th><th></th></tr></thead><tbody>
-    ${all.map(x => `<tr>
-      <td><div class="tprod"><img src="${x.p.images[0]}" alt=""><div><b>${x.p.name}</b></div></div></td>
-      <td>${x.r.n}<br><small class="muted">${x.r.d}</small></td><td class="gold">${'★'.repeat(x.r.r)}</td>
-      <td class="review-cell"><b class="u-medium">${x.r.t}</b><br><small class="muted">${x.r.b}</small></td>
-      <td><span class="st ${x.r.ok === false ? 'pending' : 'delivered'}">${x.r.ok === false ? 'Pending' : 'Published'}</span></td>
+    ${list.length ? list.map(x => `<tr>
+      <td><div class="tprod"><img src="${x.p.images[0]}" alt=""><div><b>${esc(x.p.name)}</b></div></div></td>
+      <td>${esc(x.r.n)}<br><small class="muted">${esc(x.r.d)}${x.r.v ? ' · verified' : ''}</small></td>
+      <td class="gold">${'★'.repeat(x.r.r)}</td>
+      <td class="review-cell"><b class="u-medium">${esc(x.r.t)}</b><br><small class="muted">${esc(x.r.b)}</small></td>
+      <td><span class="st ${x.r.ok === false ? 'pending' : 'delivered'}">${x.r.ok === false ? 'Pending' : 'Published'}</span>
+          ${x.r.src === 'staff' ? '<br><small class="muted">added by staff</small>'
+            : x.r.src === 'customer' ? '<br><small class="muted">from a shopper</small>' : ''}</td>
       <td class="u-nowrap">
-        ${x.r.ok === false ? `<button class="ico" data-cmd="review:approve" data-arg="${x.p.id}" data-arg2="${x.i}" title="Approve"><svg viewBox="0 0 24 24"><path d="M20 7 9 18l-5-5"/></svg></button>` : ''}
-        <button class="ico del" data-cmd="review:delete" data-arg="${x.p.id}" data-arg2="${x.i}" title="Delete"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg></button></td>
-    </tr>`).join('')}</tbody></table></div></div>`;
+        ${x.r.ok === false ? `<button class="ico" data-cmd="review:approve" data-arg="${x.p.id}" data-arg2="${esc(x.r.id ?? x.i)}" title="Approve"><svg viewBox="0 0 24 24"><path d="M20 7 9 18l-5-5"/></svg></button>` : ''}
+        <button class="ico" data-cmd="review:edit" data-arg="${x.p.id}" data-arg2="${esc(x.r.id ?? x.i)}" title="Edit"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button>
+        <button class="ico del" data-cmd="review:delete" data-arg="${x.p.id}" data-arg2="${esc(x.r.id ?? x.i)}" title="Delete"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg></button></td>
+    </tr>`).join('') : '<tr><td colspan="6" class="muted table-empty">Nothing in this filter.</td></tr>'}
+  </tbody></table></div></div>`;
 }
-function approveRev(id, i) { P(id).reviews[i].ok = true; saveProducts(); vReviews(); toast('Review published'); }
-function delRev(id, i) { if (!confirm('Delete this review?')) return; P(id).reviews.splice(i, 1); saveProducts(); vReviews(); toast('Review deleted'); }
+
+/* Compose / edit ----------------------------------------------------------- */
+function findReview(pid, ref) {
+  if (LIVE_REVIEWS) return (LIVE_REVIEWS[pid] || []).find(r => String(r.id) === String(ref));
+  const p = P(pid);
+  return p ? p.reviews[Number(ref)] : null;
+}
+
+function editReview(id, ref) {
+  const editing = id !== undefined && id !== '' && ref !== undefined && ref !== '';
+  const r = (editing && findReview(id, ref))
+    || { n: '', r: 5, t: '', b: '', d: monthLabel(new Date()), v: true, ok: true, src: 'staff' };
+
+  openModal(`<div class="mhead"><h3>${editing ? 'Edit' : 'Write'} review</h3>
+    <button type="button" class="icon-btn" data-action="close-modal" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+
+  <div class="pane attention-panel u-mb-md">
+    <p class="muted">Only publish reviews a real customer actually gave you. Transcribe a
+      WhatsApp reply or email <b>word for word</b> — do not tidy the wording, and do not
+      invent one. Fake reviews are a Google penalty and, in the UK, illegal under the
+      DMCC Act 2024.</p>
+  </div>
+
+  <form id="review-form" data-pid="${esc(id || '')}" data-ref="${editing ? esc(ref) : ''}" data-rid="${esc(r.id || '')}">
+    <div class="f-grid">
+      <div class="f full"><label for="rv-product">Product</label>
+        <select name="pid" id="rv-product" ${editing ? 'disabled' : ''} required>
+          ${PRODUCTS.map(p => `<option value="${p.id}" ${editing && p.id === id ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}
+        </select></div>
+
+      <div class="f"><label for="rv-name">Reviewer name</label>
+        <input name="n" id="rv-name" value="${esc(r.n)}" placeholder="Amaka O." required></div>
+
+      <div class="f"><label for="rv-rating">Rating</label>
+        <select name="r" id="rv-rating">
+          ${[5, 4, 3, 2, 1].map(n => `<option value="${n}" ${r.r === n ? 'selected' : ''}>${'★'.repeat(n)} ${n}</option>`).join('')}
+        </select></div>
+
+      <div class="f"><label for="rv-date">Date shown</label>
+        <input name="d" id="rv-date" value="${esc(r.d)}" placeholder="Aug 2026"></div>
+
+      <div class="f"><label for="rv-verified">Verified purchase</label>
+        <select name="v" id="rv-verified">
+          <option value="yes" ${r.v ? 'selected' : ''}>Yes — matched to an order</option>
+          <option value="no" ${r.v ? '' : 'selected'}>No</option>
+        </select></div>
+
+      <div class="f full"><label for="rv-title">Headline</label>
+        <input name="t" id="rv-title" value="${esc(r.t)}" placeholder="My skin drinks this up" required></div>
+
+      <div class="f full"><label for="rv-body">Review</label>
+        <textarea name="b" id="rv-body" rows="4" required placeholder="Their words, exactly as they wrote them.">${esc(r.b)}</textarea></div>
+
+      <div class="f full"><label for="rv-status">Status</label>
+        <select name="ok" id="rv-status">
+          <option value="yes" ${r.ok !== false ? 'selected' : ''}>Published</option>
+          <option value="no" ${r.ok === false ? 'selected' : ''}>Pending approval</option>
+        </select></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">${editing ? 'Save changes' : 'Add review'}</button>
+      <button class="btn btn-dark" type="button" data-action="close-modal">Cancel</button>
+    </div>
+  </form>`);
+}
+
+const monthLabel = d => d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+
+async function saveReview(event) {
+  event.preventDefault();
+  const form = event.target;
+  const d = Object.fromEntries(new FormData(form));
+  const editing = form.dataset.ref !== '';
+  /* A disabled <select> is omitted from FormData, so fall back to the dataset. */
+  const pid = d.pid || form.dataset.pid;
+  const product = P(pid);
+  if (!product) return toast('Pick a product');
+
+  const entry = {
+    n: d.n.trim(), r: +d.r, t: d.t.trim(), b: d.b.trim(),
+    d: d.d.trim() || monthLabel(new Date()),
+    v: d.v === 'yes',
+    ok: d.ok === 'yes',
+    src: 'staff'
+  };
+
+  const btn = form.querySelector('[type="submit"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+  if (LIVE_REVIEWS) {
+    /* Live path — writes to the shared store, visible to shoppers at once. */
+    const existing = editing ? findReview(pid, form.dataset.ref) : null;
+    try {
+      await API.saveReview({ pid, id: existing ? existing.id : undefined,
+        ...entry, src: existing ? (existing.src || 'staff') : 'staff' });
+      await loadLiveReviews();
+      closeModal();
+      await vReviews();
+      toast(entry.ok ? 'Published — live on the storefront' : 'Saved as pending');
+    } catch (err) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Save'; }
+      toast('Could not save: ' + err.message);
+    }
+    return;
+  }
+
+  /* Offline path — local copy only. */
+  if (editing) {
+    const i = Number(form.dataset.ref);
+    entry.src = product.reviews[i].src || 'staff';
+    product.reviews[i] = entry;
+  } else {
+    product.reviews.unshift(entry);
+  }
+  syncRating(product);
+  saveProducts();
+  closeModal();
+  vReviews();
+  toast(editing ? 'Review updated' : 'Review added — remember to export');
+}
+
+/* Keep the headline rating in step with the reviews behind it. Otherwise the
+   card advertises 4.9 while the reviews average 4.2, which shoppers notice. */
+function syncRating(product) {
+  const live = product.reviews.filter(r => r.ok !== false);
+  if (!live.length) return;
+  product.rating = Math.round((live.reduce((s, r) => s + r.r, 0) / live.length) * 10) / 10;
+}
+
+async function approveRev(id, ref) {
+  if (LIVE_REVIEWS) {
+    try {
+      await API.approveReview(id, ref);
+      await loadLiveReviews();
+      await vReviews();
+      toast('Approved — now live on the storefront');
+    } catch (err) { toast('Could not approve: ' + err.message); }
+    return;
+  }
+  P(id).reviews[Number(ref)].ok = true; syncRating(P(id)); saveProducts(); vReviews();
+  toast('Approved — export to publish');
+}
+
+async function delRev(id, ref) {
+  if (!confirm('Delete this review?')) return;
+  if (LIVE_REVIEWS) {
+    try {
+      await API.deleteReview(id, ref);
+      await loadLiveReviews();
+      await vReviews();
+      toast('Review deleted');
+    } catch (err) { toast('Could not delete: ' + err.message); }
+    return;
+  }
+  P(id).reviews.splice(Number(ref), 1); syncRating(P(id)); saveProducts(); vReviews(); toast('Review deleted');
+}
+
+/* One-time seeding: push the reviews from data.js into the live store so the
+   storefront does not go from "19 reviews" to "none" the moment it goes live. */
+async function seedLiveReviews() {
+  if (!API.enabled) return toast('Only works on the deployed site');
+  const payload = {};
+  PRODUCTS.forEach(p => {
+    const list = p.reviews.map((r, i) => ({
+      id: `SEED-${p.id}-${i}`,
+      n: r.n, r: r.r, t: r.t, b: r.b, d: r.d,
+      v: !!r.v, ok: r.ok !== false, src: r.src || 'seed',
+      at: new Date().toISOString()
+    }));
+    if (list.length) payload[p.id] = list;
+  });
+
+  const force = LIVE_REVIEWS && Object.keys(LIVE_REVIEWS).length;
+  if (force && !confirm('The live store already has reviews. Overwrite them all with the ones from data.js?')) return;
+
+  try {
+    const res = await API.importReviews(payload, !!force);
+    await loadLiveReviews();
+    await vReviews();
+    toast(`Seeded ${res.seeded} products`);
+  } catch (err) {
+    toast('Seed failed: ' + err.message);
+  }
+}
+
+/* Export ------------------------------------------------------------------- */
+/* Emits just the reviews + rating for each product, in the exact shape data.js
+   expects, so the client can paste without hand-editing JSON. */
+function exportReviews() {
+  const blocks = PRODUCTS.map(p => {
+    const source = LIVE_REVIEWS ? (LIVE_REVIEWS[p.id] || []) : p.reviews;
+    const live = source.filter(r => r.ok !== false)
+      .map(({ src, id, at, ...rest }) => rest);   // strip internal fields
+    const avg = live.length
+      ? Math.round((live.reduce((t, r) => t + (+r.r || 0), 0) / live.length) * 10) / 10
+      : p.rating;
+    return `  /* ${p.name} — rating ${avg}, ${live.length} review(s) */\n`
+      + `  "${p.id}": {\n    "rating": ${avg},\n    "reviews": ${
+        JSON.stringify(live, null, 4).split('\n').join('\n    ')}\n  }`;
+  }).join(',\n\n');
+
+  const out = `/* Reviews exported from the admin portal on ${new Date().toISOString().slice(0, 10)}.
+
+   HOW TO PUBLISH THESE
+   1. Open lara-beauty/data.js
+   2. For each product below, replace that product's "rating" and "reviews"
+      values with the ones here.
+   3. If every review is now genuine, set  reviewsVerified: true  in
+      SEED_SETTINGS and delete  reviewsAreDemo.
+   4. Run:  node build.js
+   5. Redeploy the lara-beauty-pages folder.
+
+   Only published (approved) reviews are included.
+*/
+
+const EXPORTED_REVIEWS = {
+${blocks}
+};
+`;
+  download('lara-beauty-reviews.js', out);
+  toast('Exported — paste into data.js, then rebuild');
+}
 
 /* ---------- marketing ---------- */
-function vMarketing() {
+/* Subscribers now live in the shared store, not one visitor's browser. */
+let LIVE_SUBS = null;
+const subsList = () => (LIVE_SUBS !== null ? LIVE_SUBS : SUBS.slice().reverse());
+
+async function loadLiveSubs() {
+  if (!API.enabled) return;
+  try { LIVE_SUBS = (await API.getSubscribers()).subscribers || []; }
+  catch (err) { LIVE_SUBS = null; }
+}
+
+async function vMarketing() {
+  if (LIVE_SUBS === null && API.enabled) await loadLiveSubs();
   $('#view').innerHTML = `
   <div class="kpis cols-3">
-    ${kpi('Subscribers', SUBS.length, null, 'M3 6h18v12H3z')}
+    ${kpi('Subscribers', subsList().length, null, 'M3 6h18v12H3z')}
     ${kpi('Conversion rate', '3.4%', 12, 'm7 15 4-5 3 3 5-7')}
     ${kpi('Discount redemptions', 47, 8, 'M9 9h.01M15 15h.01M6 18 18 6')}
   </div>
@@ -648,9 +1132,13 @@ function vMarketing() {
     <div class="pane"><div class="ph"><h3>Announcement bar</h3><p>Shows at the top of every page</p></div>
       <div class="f"><textarea id="ann" rows="3">${SETTINGS.announce}</textarea></div>
       <button class="btn btn-primary btn-sm u-mt-md" data-cmd="announce:save">Save</button></div>
-    <div class="pane"><div class="ph"><h3>Newsletter subscribers</h3><button class="btn btn-ghost btn-sm" data-cmd="export:subs">Export</button></div>
+    <div class="pane"><div class="ph"><h3>Newsletter subscribers</h3>
+      <span><button class="btn btn-ghost btn-sm" data-cmd="subs:refresh">Refresh</button>
+      <button class="btn btn-ghost btn-sm" data-cmd="export:subs">Export</button></span></div>
+      ${LIVE_SUBS === null ? '<p class="muted">Showing this browser\'s copy only — the shared list loads on the deployed site.</p>' : ''}
       <div class="tablewrap scroll-panel"><table class="u-min0"><tbody>
-        ${SUBS.length ? SUBS.slice().reverse().map(s => `<tr><td>${s.email}</td><td class="muted">${s.d}</td></tr>`).join('') : '<tr><td class="muted">No subscribers yet.</td></tr>'}
+        ${subsList().length ? subsList().map(s => `<tr><td>${esc(s.email)}</td><td class="muted">${esc(s.d)}</td>
+          <td class="muted">${esc(s.provider || 'local')}</td></tr>`).join('') : '<tr><td class="muted">No subscribers yet.</td></tr>'}
       </tbody></table></div></div>
   </div>
   <div class="pane"><div class="ph"><h3>Discount codes</h3><p>Demo data — wire to your payment provider in production</p></div>
@@ -659,7 +1147,12 @@ function vMarketing() {
         .map(r => `<tr><td class="gold">${r[0]}</td><td class="muted">${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td><span class="st ${r[4]}">${r[4] === 'delivered' ? 'Active' : 'Scheduled'}</span></td></tr>`).join('')}
     </tbody></table></div></div>`;
 }
-function exportSubs() { download('subscribers.csv', 'email,date\n' + SUBS.map(s => `${s.email},${s.d}`).join('\n')); }
+function exportSubs() {
+  const rows = subsList();
+  download('subscribers.csv',
+    'email,date,source\n' + rows.map(s => `${s.email},${s.d},${s.provider || 'local'}`).join('\n'));
+  toast(`Exported ${rows.length} subscribers`);
+}
 
 /* ---------- analytics ---------- */
 function vAnalytics() {
@@ -688,7 +1181,7 @@ function vAnalytics() {
   <div class="panes cols-2">
     <div class="pane"><div class="ph"><h3>Product performance</h3></div><div class="tablewrap"><table>
       <thead><tr><th>Product</th><th>Units</th><th>Revenue</th><th>Share</th></tr></thead><tbody>
-      ${stats.map(s => `<tr><td><div class="tprod"><img src="${s.p.images[0]}" alt=""><div><b>${s.p.name}</b></div></div></td>
+      ${stats.map(s => `<tr><td><div class="tprod"><img src="${s.p.images[0]}" alt=""><div><b>${esc(s.p.name)}</b></div></div></td>
         <td>${s.units}</td><td class="gold">${money(s.rev)}</td>
         <td class="share-cell"><div class="bar"><i style="--bar-fill:${s.rev / stats[0].rev * 100}%"></i></div></td></tr>`).join('')}
     </tbody></table></div></div>
@@ -715,11 +1208,38 @@ function vSettings() {
       </div></div>
   </div>
   <div class="pane u-mb-md"><button class="btn btn-primary" data-cmd="settings:save">Save settings</button></div>
-  <div class="pane"><div class="ph"><div><h3>Data</h3><p>Everything is stored in your browser via localStorage</p></div></div>
+  <div class="pane u-mb-md"><div class="ph"><div><h3>Backup &amp; restore</h3>
+      <p>${API.enabled
+        ? 'Works on the live store — what every visitor sees.'
+        : 'Not connected to the live store; these act on this browser only.'}</p></div></div>
+    <p class="muted u-mb-md">Download a full backup before any big change. The file
+      contains your catalogue, reviews, orders, enquiries and subscribers.</p>
     <div class="pane-actions">
-      <button class="btn btn-ghost btn-sm" data-cmd="export:json">Export all data (JSON)</button>
-      <button class="btn btn-ghost btn-sm" data-cmd="export:csv">Export orders (CSV)</button>
-      <button class="btn btn-dark btn-sm" data-cmd="data:reset">Reset to demo data</button></div></div>`;
+      <button class="btn btn-primary btn-sm" data-cmd="data:backup">Download full backup</button>
+      <button class="btn btn-ghost btn-sm" data-cmd="data:restore">Restore from backup…</button>
+      <button class="btn btn-ghost btn-sm" data-cmd="export:csv">Orders as CSV</button>
+      <button class="btn btn-ghost btn-sm" data-cmd="export:subs">Subscribers as CSV</button>
+      <button class="btn btn-ghost btn-sm" data-cmd="review:export">Reviews for data.js</button>
+    </div>
+    <input type="file" id="restore-file" accept="application/json" hidden>
+  </div>
+
+  <div class="pane"><div class="ph"><div><h3 class="danger-title">Clear data</h3>
+      <p>Permanent. Take a backup first.</p></div></div>
+    <p class="muted u-mb-md"><b>Before you launch</b>, use <em>Remove demo content</em>.
+      It deletes the sample reviews and demo orders but keeps your products, so the
+      shop opens honestly instead of with invented social proof.</p>
+    <div class="pane-actions">
+      <button class="btn btn-ghost btn-sm" data-cmd="data:wipe" data-arg="demo">Remove demo content</button>
+      <button class="btn btn-ghost btn-sm" data-cmd="data:wipe" data-arg="orders">Clear orders</button>
+      <button class="btn btn-ghost btn-sm" data-cmd="data:wipe" data-arg="reviews">Clear all reviews</button>
+      <button class="btn btn-ghost btn-sm" data-cmd="data:wipe" data-arg="subscribers">Clear subscribers</button>
+      <button class="btn btn-dark btn-sm" data-cmd="data:wipe" data-arg="everything">Erase everything</button>
+    </div>
+    <p class="muted u-mt-md">“Reset this browser” only clears your local copy and is
+      useful if the admin looks out of step with the live site.
+      <button class="linkish" data-cmd="data:reset">Reset this browser</button></p>
+  </div>`;
 }
 function sfield(k, label, full, type) {
   return `<div class="f ${full ? 'full' : ''}"><label>${label}</label><input id="set-${k}" type="${type || 'text'}" value="${SETTINGS[k]}"></div>`;
@@ -748,6 +1268,75 @@ function exportCSV() {
   download('lara-beauty-orders.csv', rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n'));
   toast('Orders exported');
 }
+/* --- live backup / restore / wipe ---------------------------------------- */
+async function backupAll() {
+  if (!API.enabled) return exportJSON();          // offline: local copy only
+  try {
+    const data = await API.exportAll();
+    const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
+    download(`lara-beauty-backup-${stamp}.json`, JSON.stringify(data, null, 2));
+    const s = data._summary || {};
+    toast(`Backed up ${s.products || 0} products, ${s.reviews || 0} reviews, ${s.messages || 0} messages`);
+  } catch (err) {
+    toast('Backup failed: ' + err.message);
+  }
+}
+
+async function restoreFromFile(file) {
+  let parsed;
+  try { parsed = JSON.parse(await file.text()); }
+  catch { return toast('That file is not valid JSON'); }
+
+  const s = parsed._summary || {};
+  const what = parsed._exportedAt
+    ? `Backup from ${fdate(parsed._exportedAt)} — ${s.products || 0} products, ${s.reviews || 0} reviews.`
+    : 'This file has no backup header; it may not be a Lara backup.';
+
+  const replace = confirm(`${what}\n\nOK = REPLACE current data with the file.\nCancel = merge (keep both, file wins on conflicts).`);
+  if (!confirm(replace ? 'Replace everything? This cannot be undone.' : 'Merge this backup in?')) return;
+
+  try {
+    const res = await API.importAll(parsed, replace ? 'replace' : 'merge');
+    await loadLiveStore(); await loadLiveReviews(); await loadLiveMessages();
+    toast(`Restored (${res.mode})`);
+    nav(view);
+  } catch (err) {
+    toast('Restore failed: ' + err.message);
+  }
+}
+
+const WIPE_LABELS = {
+  demo: 'sample reviews and demo orders',
+  orders: 'every order',
+  reviews: 'every review, including real ones',
+  subscribers: 'your whole mailing list',
+  everything: 'ALL products, reviews, orders and subscribers'
+};
+
+async function wipeData(scope) {
+  if (!API.enabled) return toast('Only available on the live site');
+  const what = WIPE_LABELS[scope] || scope;
+
+  if (!confirm(`Permanently delete ${what}?\n\nTake a backup first if you have not.`)) return;
+  /* A second, typed confirmation for the irreversible ones. */
+  if (scope === 'everything' || scope === 'reviews' || scope === 'subscribers') {
+    const typed = prompt(`This cannot be undone.\n\nType DELETE to confirm:`);
+    if (typed !== 'DELETE') return toast('Cancelled');
+  }
+
+  try {
+    const res = await API.wipe(scope);
+    await loadLiveStore(); await loadLiveReviews(); await loadLiveMessages();
+    LIVE_SUBS = null;
+    toast(res.seedReviewsRemoved !== undefined
+      ? `Removed ${res.seedReviewsRemoved} sample reviews`
+      : `Cleared: ${(res.cleared || []).join(', ') || scope}`);
+    nav(view);
+  } catch (err) {
+    toast('Could not clear: ' + err.message);
+  }
+}
+
 function exportJSON() {
   download('lara-beauty-data.json', JSON.stringify({ products: PRODUCTS, orders: ORDERS, settings: SETTINGS, subscribers: SUBS }, null, 2));
   toast('Data exported');
@@ -768,9 +1357,224 @@ if (hasSession()) {
 }
 
 
-/* ===================== MESSAGES ===================== */
-function messages() { return DB.read('lba_messages', []); }
+/* ===================== LIVE PUBLISHING =====================
+   Admin edits go into a DRAFT. Shoppers keep seeing the last PUBLISHED version
+   until someone presses Publish. Prices are the reason: an unreviewed keystroke
+   should never be what a customer is charged.
+   ========================================================================= */
+let LIVE_STORE = null;      // { draft, published, hasRollback, version }
+let storeError = '';
+
+/* store.js fires db:saved on every write, so one listener covers all ~20 admin
+   save paths. adoptSnapshot suppresses it: applying live data is not an edit.
+   (The save helpers are `const`, so they are not on `window` and cannot be
+   monkey-patched — the event is the reliable hook.) */
+let adopting = false;
+const PUBLISHABLE = ['products', 'categories', 'content', 'settings'];
+document.addEventListener('db:saved', e => {
+  if (adopting || !PUBLISHABLE.includes(e.detail)) return;
+  queueDraftSave();
+});
+
+/* The slice of admin state that gets published. Orders, messages and reviews
+   are deliberately excluded — they are transactional, not editorial. */
+function currentSnapshot() {
+  return {
+    products: PRODUCTS,
+    categories: CATEGORIES,
+    content: CONTENT,
+    settings: SETTINGS
+  };
+}
+
+async function loadLiveStore() {
+  if (!API.enabled) { storeError = 'offline'; return; }
+  try {
+    LIVE_STORE = await API.getDraft();
+    storeError = '';
+    /* Adopt whatever is already live so the admin is editing reality, not the
+       seed data baked into data.js at build time. */
+    const source = LIVE_STORE.draft || LIVE_STORE.published;
+    if (source) adoptSnapshot(source);
+  } catch (err) {
+    LIVE_STORE = null;
+    storeError = err.message;
+  }
+}
+
+function adoptSnapshot(snap) {
+  adopting = true;
+  try { applySnapshot(snap); } finally { adopting = false; }
+}
+
+function applySnapshot(snap) {
+  if (Array.isArray(snap.products)) { PRODUCTS = snap.products; saveProducts(); }
+  if (Array.isArray(snap.categories)) { CATEGORIES = snap.categories; saveCategories(); }
+  if (snap.content) { CONTENT = merge(SEED_CONTENT, snap.content); saveContent(); }
+  if (snap.settings) { SETTINGS = Object.assign({}, SEED_SETTINGS, snap.settings); saveSettings(); }
+}
+
+/* Compare draft to published so the bar can say what is actually pending. */
+function pendingChanges() {
+  if (!LIVE_STORE) return [];
+  const pub = LIVE_STORE.published;
+  const cur = currentSnapshot();
+  if (!pub) return ['Nothing has been published yet'];
+
+  const out = [];
+  const byId = list => Object.fromEntries((list || []).map(p => [p.id, p]));
+  const a = byId(pub.products), b = byId(cur.products);
+
+  Object.keys(b).forEach(id => {
+    if (!a[id]) return out.push(`New product: ${b[id].name}`);
+    if (a[id].price !== b[id].price) {
+      /* Admin price fields are Naira. money() follows the storefront currency
+         switch, which would print a Naira figure with a euro sign. */
+      out.push(`${b[id].name}: price ₦${Number(a[id].price).toLocaleString('en-NG')} → ₦${Number(b[id].price).toLocaleString('en-NG')}`);
+    }
+    if (a[id].name !== b[id].name) out.push(`Renamed: ${a[id].name} → ${b[id].name}`);
+    if (JSON.stringify(a[id].variants || []) !== JSON.stringify(b[id].variants || [])) {
+      out.push(`${b[id].name}: variants or stock changed`);
+    }
+  });
+  Object.keys(a).forEach(id => {
+    if (!b[id]) out.push(`Removed: ${a[id].name}`);
+  });
+
+  if (JSON.stringify(pub.content) !== JSON.stringify(cur.content)) out.push('Page content edited');
+  if (JSON.stringify(pub.settings) !== JSON.stringify(cur.settings)) out.push('Settings changed');
+  if (JSON.stringify(pub.categories) !== JSON.stringify(cur.categories)) out.push('Categories changed');
+
+  return out;
+}
+
+/* Autosave the draft after any admin change, debounced. Losing an afternoon of
+   edits to a closed tab is a worse failure than a few extra requests. */
+let draftTimer = null;
+function queueDraftSave() {
+  if (!LIVE_STORE) return;
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(async () => {
+    try {
+      await API.saveDraft(currentSnapshot());
+      LIVE_STORE.draft = currentSnapshot();
+      renderPublishBar();
+    } catch (err) {
+      if (err.message !== 'validation failed') return;
+      toast('Draft not saved: ' + err.message);
+    }
+  }, 900);
+}
+
+function renderPublishBar() {
+  const bar = $('#publish-bar');
+  if (!bar) return;
+
+  if (!LIVE_STORE) {
+    bar.hidden = true;
+    return;
+  }
+
+  const changes = pendingChanges();
+  bar.hidden = false;
+  bar.classList.toggle('has-changes', changes.length > 0);
+  bar.innerHTML = changes.length
+    ? `<div class="pb-txt">
+         <b>${changes.length} unpublished change${changes.length === 1 ? '' : 's'}</b>
+         <span class="muted">${esc(changes.slice(0, 2).join(' · '))}${changes.length > 2 ? ` · +${changes.length - 2} more` : ''}</span>
+       </div>
+       <div class="pb-actions">
+         <button class="btn btn-ghost btn-sm" data-cmd="live:review">Review</button>
+         <button class="btn btn-ghost btn-sm" data-cmd="live:discard">Discard</button>
+         <button class="btn btn-primary btn-sm" data-cmd="live:publish">Publish changes</button>
+       </div>`
+    : `<div class="pb-txt">
+         <b class="pb-live">Everything is live</b>
+         <span class="muted">${LIVE_STORE.publishedAt ? 'Last published ' + fdate(LIVE_STORE.publishedAt) : 'Nothing published yet'}</span>
+       </div>
+       <div class="pb-actions">
+         ${LIVE_STORE.hasRollback ? '<button class="btn btn-ghost btn-sm" data-cmd="live:rollback">Undo last publish</button>' : ''}
+         ${!LIVE_STORE.published ? '<button class="btn btn-primary btn-sm" data-cmd="live:publish">Publish site</button>' : ''}
+       </div>`;
+}
+
+function reviewChanges() {
+  const changes = pendingChanges();
+  openModal(`<div class="mhead"><h3>Unpublished changes</h3>
+    <button type="button" class="icon-btn" data-action="close-modal" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <p class="muted">These go live the moment you publish. Check the prices.</p>
+    <ul class="change-list">${changes.map(c => `<li>${esc(c)}</li>`).join('') || '<li class="muted">No differences.</li>'}</ul>
+    <div class="form-actions">
+      <button class="btn btn-primary" data-cmd="live:publish">Publish these changes</button>
+      <button class="btn btn-dark" type="button" data-action="close-modal">Keep editing</button>
+    </div>`);
+}
+
+async function publishLive() {
+  const changes = pendingChanges();
+  if (!confirm(`Publish ${changes.length} change${changes.length === 1 ? '' : 's'} to the live site now?`)) return;
+  try {
+    const res = await API.publish(currentSnapshot());
+    await loadLiveStore();
+    closeModal();
+    renderPublishBar();
+    toast(res.rebuild === 'triggered'
+      ? `Published — live now (v${res.version}), search data rebuilding`
+      : `Published — live now (v${res.version})`);
+  } catch (err) {
+    closeModal();
+    if (err.message === 'validation failed') {
+      return toast('Publish blocked — check prices');
+    }
+    toast('Publish failed: ' + err.message);
+  }
+}
+
+async function discardDraft() {
+  if (!confirm('Throw away every unpublished change and go back to what is live?')) return;
+  try {
+    await API.discardDraft();
+    await loadLiveStore();
+    renderPublishBar();
+    nav(view);
+    toast('Draft discarded');
+  } catch (err) { toast('Could not discard: ' + err.message); }
+}
+
+async function rollbackLive() {
+  if (!confirm('Roll the live site back to the previous published version?')) return;
+  try {
+    await API.rollback();
+    await loadLiveStore();
+    renderPublishBar();
+    nav(view);
+    toast('Rolled back — live site restored');
+  } catch (err) { toast('Rollback failed: ' + err.message); }
+}
+
+/* ===================== MESSAGES =====================
+   Messages live in the shared store when the API is reachable, so an enquiry
+   sent from a customer's phone shows up here. LIVE_MESSAGES is null until the
+   first load resolves; until then we fall back to this browser's copy. */
+let LIVE_MESSAGES = null;
+let msgError = '';
+
+function messages() {
+  return LIVE_MESSAGES !== null ? LIVE_MESSAGES : DB.read('lba_messages', []);
+}
 function saveMessages(list) { DB.write('lba_messages', list); }
+
+async function loadLiveMessages() {
+  if (!API.enabled) { msgError = 'offline'; return; }
+  try {
+    const data = await API.getMessages();
+    LIVE_MESSAGES = data.messages || [];
+    msgError = '';
+  } catch (err) {
+    LIVE_MESSAGES = null;
+    msgError = err.message;
+  }
+}
 
 function unreadCount() { return messages().filter(m => !m.read).length; }
 
@@ -784,13 +1588,28 @@ function refreshMsgBadge() {
 
 let msgFilter = 'all';
 
-function vMessages() {
+async function vMessages() {
+  if (LIVE_MESSAGES === null && !msgError) {
+    $('#view').innerHTML = '<div class="pane"><p class="muted">Loading inbox…</p></div>';
+    await loadLiveMessages();
+  }
   const all = messages();
+  const liveInbox = LIVE_MESSAGES !== null;
   const list = msgFilter === 'all' ? all : all.filter(m => m.type === msgFilter);
-  const types = ['all', 'enquiry', 'order', 'subscriber'];
+  const types = ['all', 'enquiry', 'order', 'subscriber', 'outbound'];
   const configured = MAIL.provider !== 'none';
 
   $('#view').innerHTML = `
+  ${liveInbox ? `<div class="pane live-panel">
+    <h3 class="live-title">Shared inbox — live</h3>
+    <p class="muted">Enquiries and orders from every device land here, not just this one.</p>
+  </div>` : `<div class="pane attention-panel">
+    <h3 class="attention-title">Local inbox only</h3>
+    <p class="muted">${msgError === 'offline'
+      ? 'Not running on the deployed site, so only messages sent from this browser are shown.'
+      : 'Could not reach the shared inbox — showing this browser\'s copy. ' + esc(msgError)}</p>
+  </div>`}
+
   ${configured ? '' : `<div class="pane attention-panel">
     <h3 class="attention-title">Email delivery is not switched on yet</h3>
     <p class="muted">Messages are being saved here, but nothing is emailed out.
@@ -807,24 +1626,28 @@ function vMessages() {
     ${types.map(t => `<button class="chip ${msgFilter === t ? 'on' : ''}"
       data-cmd="msg:filter" data-arg="${t}">${t}${t !== 'all' ? ` (${all.filter(m => m.type === t).length})` : ''}</button>`).join('')}
     <span class="toolbar-right">
+      ${liveInbox ? '<button class="btn btn-ghost btn-sm" data-cmd="msg:refresh">Refresh</button>' : ''}
       <button class="btn btn-ghost btn-sm" data-cmd="msg:read-all">Mark all read</button>
       <button class="btn btn-ghost btn-sm" data-cmd="msg:export">Export CSV</button>
+      <button class="btn btn-primary btn-sm" data-cmd="mail:compose">+ Compose email</button>
     </span>
   </div>
 
   <div class="pane"><div class="tablewrap"><table>
-    <thead><tr><th>Received</th><th>Type</th><th>From</th><th>Message</th><th>Email sent</th><th></th></tr></thead>
+    <thead><tr><th>Date</th><th>Type</th><th>From / To</th><th>Message</th><th>Email sent</th><th></th></tr></thead>
     <tbody>${list.length ? list.map(m => `
       <tr class="${m.read ? '' : 'msg-unread'}">
         <td class="muted u-nowrap">${fdate(m.date)}</td>
-        <td><span class="st ${m.type === 'order' ? 'shipped' : m.type === 'enquiry' ? 'processing' : 'delivered'}">${m.type}</span></td>
+        <td><span class="st ${m.type === 'order' ? 'shipped' : m.type === 'enquiry' ? 'processing'
+            : m.type === 'outbound' ? 'pending' : 'delivered'}">${m.type === 'outbound' ? 'sent by us' : m.type}</span></td>
         <td>${m.name ? `<b class="u-medium">${esc(m.name)}</b><br>` : ''}
             <small class="muted">${esc(m.email || '')}${m.phone ? '<br>' + esc(m.phone) : ''}</small></td>
         <td class="msg-body">${esc((m.body || '').slice(0, 240))}${(m.body || '').length > 240 ? '…' : ''}</td>
-        <td class="${m.delivered ? 'delivery-ok' : 'delivery-pending'}">${m.delivered ? 'Sent' : 'Saved only'}</td>
+        <td class="${m.delivered ? 'delivery-ok' : 'delivery-pending'}">${
+          m.delivered ? 'Sent' : m.type === 'outbound' ? 'Handed to mail app' : 'Saved only'}</td>
         <td class="u-nowrap">
-          ${m.email ? `<a class="ico" title="Reply" href="mailto:${esc(m.email)}?subject=${encodeURIComponent('Re: ' + (m.subject || 'Your message'))}">
-            <svg viewBox="0 0 24 24"><path d="M3 6h18v12H3z"/><path d="m3 7 9 6 9-6"/></svg></a>` : ''}
+          ${m.email ? `<button class="ico" title="Reply" data-cmd="mail:reply" data-arg="${m.id}">
+            <svg viewBox="0 0 24 24"><path d="M3 6h18v12H3z"/><path d="m3 7 9 6 9-6"/></svg></button>` : ''}
           <button class="ico" title="Toggle read" data-cmd="msg:toggle" data-arg="${m.id}">
             <svg viewBox="0 0 24 24"><path d="M20 7 9 18l-5-5"/></svg></button>
           <button class="ico del" title="Delete" data-cmd="msg:delete" data-arg="${m.id}">
@@ -835,24 +1658,35 @@ function vMessages() {
   refreshMsgBadge();
 }
 
-function toggleMsgRead(id) {
+async function toggleMsgRead(id) {
   const list = messages();
   const m = list.find(x => x.id === id);
-  if (m) { m.read = !m.read; saveMessages(list); }
+  if (!m) return;
+  m.read = !m.read;
+  if (LIVE_MESSAGES !== null) {
+    try { await API.markMessage(id, m.read); } catch (e) { toast('Sync failed: ' + e.message); }
+  } else saveMessages(list);
   vMessages();
 }
 
-function deleteMsg(id) {
+async function deleteMsg(id) {
   if (!confirm('Delete this message?')) return;
-  saveMessages(messages().filter(m => m.id !== id));
+  if (LIVE_MESSAGES !== null) {
+    try { await API.deleteMessage(id); await loadLiveMessages(); }
+    catch (e) { return toast('Delete failed: ' + e.message); }
+  } else {
+    saveMessages(messages().filter(m => m.id !== id));
+  }
   vMessages();
   toast('Message deleted');
 }
 
-function markAllRead() {
+async function markAllRead() {
   const list = messages();
   list.forEach(m => m.read = true);
-  saveMessages(list);
+  if (LIVE_MESSAGES !== null) {
+    try { await API.markAllMessages(); } catch (e) { toast('Sync failed: ' + e.message); }
+  } else saveMessages(list);
   vMessages();
   toast('All marked read');
 }
@@ -866,6 +1700,148 @@ function exportMessages() {
   download('lara-beauty-messages.csv',
     rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n'));
   toast('Messages exported');
+}
+
+
+/* ---------- compose outbound mail -------------------------------------------
+   Staff can write to a customer, a subscriber, or paste any address. Where the
+   message actually goes depends on MAIL.provider — see the note in email.js.
+   Everything sent is logged in this inbox as type "outbound".
+   -------------------------------------------------------------------------- */
+const MAIL_TEMPLATES = {
+  blank: { subject: '', body: '' },
+
+  reply: {
+    subject: 'Re: your message',
+    body: `Hi {name},\n\nThank you for getting in touch.\n\n\n\nWarm regards,\nLara Beauty Atelier\n${''}`
+  },
+
+  dispatched: {
+    subject: 'Your order is on its way',
+    body: `Hi {name},\n\nGood news — your order has left us and is on its way.\n\n`
+        + `Tracking: \n\nDelivery is usually 1–2 days in Lagos, 2–4 days elsewhere in Nigeria, `
+        + `and 2–3 days across the UK.\n\nIf anything is not right when it arrives, reply to this `
+        + `email and we will sort it.\n\nWarm regards,\nLara Beauty Atelier`
+  },
+
+  askReview: {
+    subject: 'How are you finding it?',
+    body: `Hi {name},\n\nYou ordered from us a couple of weeks ago. If you have a minute, we would `
+        + `genuinely like to know how you are finding it — good or bad. Two lines is plenty.\n\n`
+        + `You can reply straight to this email.\n\nIf something is wrong, tell us and we will `
+        + `put it right.\n\nWarm regards,\nLara Beauty Atelier`
+  },
+
+  restock: {
+    subject: 'Back in stock',
+    body: `Hi {name},\n\nThe piece you were waiting for is back in stock. We make in small batches, `
+        + `so it tends to go quickly.\n\nShop: https://lara-beauty-atelier.netlify.app/shop\n\n`
+        + `Warm regards,\nLara Beauty Atelier`
+  },
+
+  apology: {
+    subject: 'About your order',
+    body: `Hi {name},\n\nI am sorry — we got this wrong.\n\n\n\nHere is what we are doing about it:\n\n\n`
+        + `\nThank you for your patience.\n\nWarm regards,\nLara Beauty Atelier`
+  }
+};
+
+function composeMail(prefill = {}) {
+  const direct = canSendDirect();
+  const recipients = [...new Set([
+    ...ORDERS.map(o => o.email),
+    ...SUBS.map(s => s.email),
+    ...messages().map(m => m.email)
+  ].filter(Boolean))].sort();
+
+  openModal(`<div class="mhead"><h3>Compose email</h3>
+    <button type="button" class="icon-btn" data-action="close-modal" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+
+  <div class="pane attention-panel u-mb-md">
+    ${direct
+      ? `<p class="muted"><b>Sending directly via EmailJS.</b> The customer receives this from
+           your connected mailbox. A copy is kept in Messages.</p>`
+      : `<p class="muted"><b>This will open your own email app</b> with the message ready to send —
+           you press send there, so the reply comes back to your normal inbox. A copy is logged here.</p>
+         <p class="muted">To send straight from this screen instead, set
+           <code>MAIL.provider = 'emailjs'</code> in <code>email.js</code>. See EMAIL-SETUP.md.</p>`}
+  </div>
+
+  <form id="compose-form">
+    <div class="f-grid">
+      <div class="f full"><label for="cm-to">To</label>
+        <input name="to" id="cm-to" type="email" required value="${esc(prefill.to || '')}"
+               placeholder="customer@email.com" list="cm-contacts" autocomplete="off">
+        <datalist id="cm-contacts">${recipients.map(e => `<option value="${esc(e)}">`).join('')}</datalist>
+      </div>
+
+      <div class="f full"><label for="cm-template">Template</label>
+        <select id="cm-template" data-cmd-change="mail:template">
+          <option value="blank">Blank</option>
+          <option value="reply">Reply to an enquiry</option>
+          <option value="dispatched">Order dispatched</option>
+          <option value="askReview">Ask for a review</option>
+          <option value="restock">Back in stock</option>
+          <option value="apology">Apology / something went wrong</option>
+        </select>
+        <small class="muted">Templates use <code>{name}</code>, replaced with the part of the address before the @.</small>
+      </div>
+
+      <div class="f full"><label for="cm-subject">Subject</label>
+        <input name="subject" id="cm-subject" required value="${esc(prefill.subject || '')}"></div>
+
+      <div class="f full"><label for="cm-body">Message</label>
+        <textarea name="body" id="cm-body" rows="12" required>${esc(prefill.body || '')}</textarea></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">${direct ? 'Send email' : 'Open in mail app'}</button>
+      <button class="btn btn-dark" type="button" data-action="close-modal">Cancel</button>
+    </div>
+  </form>`);
+}
+
+function applyTemplate(key) {
+  const t = MAIL_TEMPLATES[key];
+  if (!t) return;
+  const to = $('#cm-to').value.trim();
+  const name = to ? to.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'there';
+  const body = $('#cm-body');
+  const subject = $('#cm-subject');
+
+  if (body.value.trim() && !confirm('Replace what you have written?')) return;
+  subject.value = t.subject;
+  body.value = t.body.replace(/\{name\}/g, name);
+}
+
+async function submitCompose(event) {
+  event.preventDefault();
+  const d = Object.fromEntries(new FormData(event.target));
+  const btn = event.target.querySelector('[type="submit"]');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+
+  const res = await sendStaffMail({
+    to: d.to.trim(), subject: d.subject.trim(), body: d.body, replyTo: MAIL.to
+  });
+
+  closeModal();
+  vMessages();
+  toast(res.ok
+    ? (res.method === 'emailjs' ? 'Email sent' : 'Opened in your mail app — press send there')
+    : 'Send failed — the draft is saved in Messages');
+}
+
+/* Reply to an existing message, with the thread quoted underneath. */
+function replyTo(id) {
+  const m = messages().find(x => x.id === id);
+  if (!m || !m.email) return toast('No address on that message');
+  const quoted = (m.body || '').split('\n').map(l => '> ' + l).join('\n');
+  composeMail({
+    to: m.email,
+    subject: 'Re: ' + (m.subject || 'your message'),
+    body: `Hi ${(m.name || '').split(' ')[0] || 'there'},\n\nThank you for getting in touch.\n\n\n\n`
+        + `Warm regards,\nLara Beauty Atelier\n\n---\nOn ${fdate(m.date)} you wrote:\n${quoted}`
+  });
 }
 
 /* ===================== PAGES & CONTENT ===================== */

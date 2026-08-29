@@ -1,0 +1,151 @@
+/* =============================================================================
+   /api/subscribe — newsletter signups
+   -----------------------------------------------------------------------------
+   Before this, a subscriber was saved to their OWN browser's localStorage. The
+   list existed nowhere you could reach it, so it could never be emailed. This
+   stores signups centrally and, when configured, pushes them straight into a
+   real email platform so you can actually send a newsletter.
+
+   Set ONE of these in Netlify -> Environment variables:
+
+     MAILERLITE_KEY   MailerLite API key       (1,000 subscribers free)
+     BREVO_KEY        Brevo API key            (unlimited contacts free)
+     OCTOPUS_KEY + OCTOPUS_LIST                (2,500 subscribers free)
+
+   With none set, signups are still stored here and exportable from the admin —
+   nothing is lost, you just have to move them manually later.
+   ========================================================================== */
+
+import { getStore } from '@netlify/blobs';
+
+const KEY = 'subscribers-v1';
+
+const json = (body, status = 200) => new Response(JSON.stringify(body), {
+  status,
+  headers: {
+    'content-type': 'application/json',
+    'cache-control': 'no-store',
+    'access-control-allow-origin': '*',
+    'access-control-allow-headers': 'content-type, x-admin-token',
+    'access-control-allow-methods': 'GET, POST, OPTIONS'
+  }
+});
+
+const store = () => getStore({ name: 'lara-subscribers', consistency: 'strong' });
+const isStaff = req => {
+  const expected = process.env.ADMIN_TOKEN;
+  return !!expected && req.headers.get('x-admin-token') === expected;
+};
+
+/* Deliberately permissive but real: catches typos, not exotic-but-valid
+   addresses. Over-strict email regexes reject more real users than spam. */
+const validEmail = e =>
+  /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(e) && e.length < 160;
+
+/** Push to whichever provider is configured. Never throws — a provider outage
+    must not lose the signup, which is already stored locally. */
+async function forward(email) {
+  try {
+    if (process.env.MAILERLITE_KEY) {
+      const r = await fetch('https://connect.mailerlite.com/api/subscribers', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          authorization: `Bearer ${process.env.MAILERLITE_KEY}`
+        },
+        body: JSON.stringify({ email })
+      });
+      return r.ok ? 'mailerlite' : `mailerlite-failed-${r.status}`;
+    }
+
+    if (process.env.BREVO_KEY) {
+      const r = await fetch('https://api.brevo.com/v3/contacts', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'api-key': process.env.BREVO_KEY },
+        body: JSON.stringify({ email, updateEnabled: true })
+      });
+      return r.ok ? 'brevo' : `brevo-failed-${r.status}`;
+    }
+
+    if (process.env.OCTOPUS_KEY && process.env.OCTOPUS_LIST) {
+      const r = await fetch(
+        `https://emailoctopus.com/api/1.6/lists/${process.env.OCTOPUS_LIST}/contacts`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ api_key: process.env.OCTOPUS_KEY, email_address: email })
+        });
+      return r.ok ? 'emailoctopus' : `emailoctopus-failed-${r.status}`;
+    }
+  } catch (err) {
+    return 'provider-error';
+  }
+  return 'stored-only';
+}
+
+export default async (req) => {
+  if (req.method === 'OPTIONS') return json({});
+
+  const s = store();
+  const list = (await s.get(KEY, { type: 'json' })) || [];
+
+  /* Staff read the list (and can export it from the admin). */
+  if (req.method === 'GET') {
+    if (!isStaff(req)) return json({ error: 'unauthorised' }, 401);
+    return json({ subscribers: list });
+  }
+
+  if (req.method !== 'POST') return json({ error: 'method not allowed' }, 405);
+
+  let payload;
+  try { payload = await req.json(); }
+  catch { return json({ error: 'bad json' }, 400); }
+
+  /* Staff removal — required by GDPR: a person can ask to be deleted. */
+  if (payload.action === 'delete') {
+    if (!isStaff(req)) return json({ error: 'unauthorised' }, 401);
+    await s.setJSON(KEY, list.filter(x => x.email !== payload.email));
+    return json({ ok: true });
+  }
+
+  const email = String(payload.email || '').trim().toLowerCase();
+  if (!validEmail(email)) return json({ error: 'Please enter a valid email address' }, 400);
+
+  /* Already subscribed is a success from the visitor's point of view — never
+     reveal whether an address is on the list. Checked BEFORE the rate limit so
+     someone re-submitting the same address is not penalised. */
+  if (list.some(x => x.email === email)) {
+    return json({ ok: true, already: true });
+  }
+
+  /* Rate limit, per IP. Expired entries are pruned on every pass so the record
+     never grows without bound. Only genuine new signups count against it. */
+  const ip = req.headers.get('x-nf-client-connection-ip')
+    || req.headers.get('x-forwarded-for') || 'unknown';
+  const rlKey = 'sub-ratelimit';
+  const now = Date.now();
+  const WINDOW = 60 * 60 * 1000, MAX = 5;
+  const rl = (await s.get(rlKey, { type: 'json' })) || {};
+  for (const [k, times] of Object.entries(rl)) {
+    const kept = (times || []).filter(t => now - t < WINDOW);
+    if (kept.length) rl[k] = kept; else delete rl[k];
+  }
+  const mine = rl[ip] || [];
+  if (mine.length >= MAX) {
+    return json({ error: 'Too many signups from this connection.' }, 429);
+  }
+  rl[ip] = [...mine, now];
+  await s.setJSON(rlKey, rl);
+
+  const provider = await forward(email);
+  list.unshift({
+    email,
+    d: new Date().toISOString().slice(0, 10),
+    source: String(payload.source || 'site').slice(0, 40),
+    provider
+  });
+  await s.setJSON(KEY, list.slice(0, 20000));
+
+  return json({ ok: true, provider });
+};
+
+export const config = { path: '/api/subscribe' };

@@ -3,23 +3,44 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0A0A0A">
+  <meta name="theme-color" content="#0A0A0A" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#FBF8F4" media="(prefers-color-scheme: light)">
 
   <title>Our Story — Lara Beauty Atelier</title>
-  <meta name="description" content="How Lara Beauty Atelier began in an Abuja kitchen and grew into a small-batch skincare house.">
   
+  <meta name="description" content="How Lara Beauty Atelier began in a Lagos kitchen and grew into a small-batch skincare house shipping from Lagos and London.">
+  <link rel="canonical" href="https://larabeautyatelier.com/about">
+  <link rel="alternate" hreflang="en-NG" href="https://larabeautyatelier.com/about">
+  <link rel="alternate" hreflang="en-GB" href="https://larabeautyatelier.com/about">
+  <link rel="alternate" hreflang="en-IE" href="https://larabeautyatelier.com/about">
+  <link rel="alternate" hreflang="en" href="https://larabeautyatelier.com/about">
+  <link rel="alternate" hreflang="x-default" href="https://larabeautyatelier.com/about">
 
   <meta property="og:type" content="website">
   <meta property="og:title" content="Our Story — Lara Beauty Atelier">
-  <meta property="og:description" content="How Lara Beauty Atelier began in an Abuja kitchen and grew into a small-batch skincare house.">
-  <meta property="og:image" content="assets/story-flatlay.jpg">
+  <meta property="og:description" content="How Lara Beauty Atelier began in a Lagos kitchen and grew into a small-batch skincare house shipping from Lagos and London.">
+  <meta property="og:image" content="https://larabeautyatelier.com/assets/story-flatlay.jpg">
+  <meta property="og:url" content="https://larabeautyatelier.com/about">
+  <meta property="og:site_name" content="Lara Beauty Atelier">
+  <meta property="og:locale" content="en_NG">
+  <meta property="og:locale:alternate" content="en_GB">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Our Story — Lara Beauty Atelier">
+  <meta name="twitter:description" content="How Lara Beauty Atelier began in a Lagos kitchen and grew into a small-batch skincare house shipping from Lagos and London.">
+  <meta name="twitter:image" content="https://larabeautyatelier.com/assets/story-flatlay.jpg">
 
   <link rel="icon" href="assets/favicon.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500;600;700&display=swap">
-  <link rel="stylesheet" href="styles.css">
+  <!-- Applies the saved theme before first paint. A deferred script would let
+       the dark page render first, producing a visible flash on light mode.
+       Kept tiny and inline for that reason; hashed in the CSP below. -->
+  <script>(function(){try{var t=localStorage.getItem('lba_theme');
+  if(!t)t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+  if(t==='light')document.documentElement.setAttribute('data-theme','light');
+  }catch(e){}})();</script>
+  <link rel="preload" href="assets/fonts/92zatBhPNqw73oTd4g.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.min.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://larabeautyatelier.com/#org","name":"Lara Beauty Atelier","url":"https://larabeautyatelier.com","logo":"https://larabeautyatelier.com/assets/logo-transparent.png","email":"info.larabeautyatelier@gmail.com","telephone":"+44 7527 574282","sameAs":["https://instagram.com/larabeautyatelier"],"address":{"@type":"PostalAddress","addressLocality":"Lagos","addressCountry":"NG"}},{"@type":"WebSite","@id":"https://larabeautyatelier.com/#site","url":"https://larabeautyatelier.com","name":"Lara Beauty Atelier","publisher":{"@id":"https://larabeautyatelier.com/#org"}}]}</script>
   
 </head>
 
@@ -31,21 +52,35 @@
   <header class="site-header" id="site-header">
     <div class="wrap nav">
       <a class="logo" href="index.html" aria-label="Lara Beauty Atelier — home">
-        <img src="assets/logo-transparent.png" alt="" width="44" height="43">
+        <picture>
+          <source srcset="assets/logo-transparent.webp" type="image/webp">
+          <img src="assets/logo-transparent.png" alt="" width="44" height="43">
+        </picture>
         <span class="lt"><b>LARA BEAUTY</b><small>Atelier</small></span>
       </a>
 
+      <!-- Five items, deliberately. Categories were removed from the top level:
+           with only 9 products the Shop page's filter chips do that job, and a
+           shorter menu is easier to scan. Shop stays highlighted while you
+           browse a category so you never lose your place. -->
       <nav class="nav-links" aria-label="Primary">
         <a href="index.html">Home</a>
-        <a href="shop.html">Shop All</a>
-        <a href="collection-skin.html">Skin Care</a>
-        <a href="collection-cleanse.html">Cleansers</a>
-        <a href="collection-lips.html">Lip Care</a>
-        <a href="about.html" aria-current="page">Our Story</a>
+        <a href="shop.html">Shop</a>
+        <a href="about.html" aria-current="page">Story</a>
+        <a href="journal.html">Journal</a>
         <a href="contact.html">Contact</a>
       </nav>
 
       <div class="nav-act">
+        <!-- No currency picker by design. Nigerian visitors see Naira and
+             everyone else sees Euros, detected automatically. A shopper should
+             not have to tell a shop what country they are in. -->
+        <button type="button" class="icon-btn theme-btn" data-action="theme"
+                aria-label="Switch between light and dark theme">
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </button>
+
         <button type="button" class="icon-btn" data-action="search" aria-label="Search products">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         </button>
@@ -61,22 +96,40 @@
     </div>
   </header>
 
+  <!-- Mobile menu.
+       Home and Your Bag are omitted deliberately: the logo and cart icon in the
+       header already do those jobs. Support links sit in a compact secondary
+       group so the whole menu fits one screen without scrolling. -->
   <nav class="mmenu" id="mobile-nav" aria-label="Mobile" aria-hidden="true">
-    <button type="button" class="icon-btn menu-close" data-action="menu-close" aria-label="Close menu">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
-    </button>
-    <a href="index.html">Home</a>
-    <a href="shop.html">Shop All</a>
-    <a href="collection-skin.html">Skin Care</a>
-    <a href="collection-cleanse.html">Cleansers</a>
-    <a href="collection-lips.html">Lip Care</a>
-    <a href="collection-sets.html">Gift Sets</a>
-    <a href="about.html">Our Story</a>
-    <a href="contact.html">Contact</a>
-    <a href="delivery.html">Delivery &amp; Returns</a>
-    <a href="faq.html">FAQ</a>
-    <a href="track.html">Track Order</a>
-    <a href="cart.html">Your Bag</a>
+    <div class="mmenu-head">
+      <span class="mmenu-title">Menu</span>
+      <button type="button" class="icon-btn menu-close" data-action="menu-close" aria-label="Close menu">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+
+    <!-- Same five as the desktop menu, in the same order, so the site feels
+         like one place. Categories sit underneath as a quieter shortcut
+         rather than competing with the primary five. -->
+    <div class="mmenu-main">
+      <a href="index.html">Home</a>
+      <a href="shop.html">Shop</a>
+      <a href="about.html">Story</a>
+      <a href="journal.html">Journal</a>
+      <a href="contact.html">Contact</a>
+    </div>
+
+    <div class="mmenu-sub">
+      <a href="collection-skin.html">Skin Care</a>
+      <a href="collection-cleanse.html">Cleansers</a>
+      <a href="collection-lips.html">Lip Care</a>
+      <a href="collection-sets.html">Gift Sets</a>
+      <a href="delivery.html">Delivery</a>
+      <a href="faq.html">FAQ</a>
+      <a href="track.html">Track order</a>
+    </div>
+
+    <a class="btn btn-primary btn-block mmenu-cta" href="cart.html">View bag</a>
   </nav>
 
   <main id="main">
@@ -91,15 +144,18 @@
     <section class="section-flush">
       <div class="wrap story">
         <div class="imgwrap">
+          <picture>
+          <source srcset="assets/story-flatlay-400.webp 400w, assets/story-flatlay-800.webp 800w, assets/story-flatlay.webp 1200w" sizes="(max-width: 900px) 94vw, 560px" type="image/webp">
+          <source srcset="assets/story-flatlay-400.jpg 400w, assets/story-flatlay-800.jpg 800w, assets/story-flatlay.jpg 1200w" sizes="(max-width: 900px) 94vw, 560px" type="image/jpeg">
           <img src="assets/story-flatlay.jpg" alt="Lara Beauty Atelier products" width="1200" height="900">
+        </picture>
         </div>
         <div>
           <p class="eyebrow">Our story</p>
-          <h1>Beauty with purpose, crafted with care</h1>
-          <p>Lara Beauty Atelier was born from a simple act of love. In 2020, Lara created her first batch of Skin Glow Oil for her mother, whose skin had turned dry and dull after years of harsh soaps and environmental stress. Within weeks, her mother's skin transformed. Friends noticed. Then colleagues. Then a waiting list formed outside the gate in Abuja.</p>
-          <p>Today, we remain exactly what we started: a small-batch, handmade beauty house dedicated to creating formulas that truly work. Every product is crafted with natural, cold-pressed oils and botanicals sourced directly from women-led cooperatives across Nigeria and West Africa. We believe that beauty should nourish rather than harm, enhance rather than mask, and last a lifetime rather than a season.</p>
-          <p>Our global reach spans from Lagos to London, from customers in their twenties to women in their seventies. Each person who trusts us with their skin becomes part of our story. That trust is sacred. That's why we test every formula on multiple skin tones, every age group, and every climate condition. That's why we offer a 30-day promise with no questions asked. That's why we wrap every order by hand in our signature black and gold bag.</p>
-          <p><strong>This is not just skincare. This is a ritual. This is trust. This is Lara Beauty Atelier.</strong></p>
+          <h1>From a Lagos kitchen to a London shelf</h1>
+          <p>Lara made her first batch of glow oil in a Lagos kitchen, for her mother, whose skin had turned dry and dull after years of harsh soaps. Friends asked. Then friends of friends. Then a queue formed outside the gate.</p>
+          <p>When Lara moved to the UK, the orders followed her — first to friends in London, then to women across Britain who could not find anything like it on the high street. Rather than choose between the two, we kept both.</p>
+          <p>Everything is still made in small batches in Lagos, from shea sourced through the same women’s co-operative in Kwara. A share of every batch is flown to our London store room, so UK orders ship domestically instead of waiting weeks at customs. Same formulas, same hands, two front doors.</p>
         </div>
       </div>
     </section>
@@ -107,13 +163,69 @@
     <section>
       <div class="wrap prose">
         <h2>What we believe</h2>
-        <p>Good skincare should be natural, effective, and built on trust. Beauty should nourish rather than harm, enhance rather than mask. We create rituals, not quick fixes. Every formula is a promise — and we stand behind every single one.</p>
+        <p>Good skincare should be short, honest and affordable enough to use every day.
+           We would rather make five things properly than fifty things adequately.</p>
 
         <h2>How we make it</h2>
-        <p>Everything is produced in small batches at our Abuja studio. Our Skin Glow Oil is made with cold-pressed Carrot Oil, Almond Oil, Avocado Oil, Sunflower Oil, Tea Tree Extract, Vitamin E and natural glow-boosting extracts. Our Natural Fairness Black Soap is handcrafted with Cocoa Pod Ash, Shea Butter, Coconut Oil, Palm Kernel Oil, Honey, Aloe Vera and Essential Herbs. Every ingredient serves a purpose. Nothing is diluted with cheap fillers, and we do not test on animals.</p>
+        <p>Everything is produced in small batches at our Lagos studio. Shea comes from a
+           women-led co-operative in Kwara, and our black soap is made to a traditional
+           Ghanaian recipe using plantain ash and cocoa pod. Nothing is diluted with cheap
+           filler oils, and we do not test on animals.</p>
+
+        <h2>Two front doors</h2>
+        <p>We hold stock in two places. Nigerian orders are packed and posted in Lagos.
+           UK and European orders ship from our London store room, so nothing sits in
+           customs and nobody pays an import surprise at the door. Prices are set for
+           each market rather than converted, which is why you can shop in Naira or
+           Euros and see a fair figure either way.</p>
 
         <h2>Who it is for</h2>
-        <p>Every formula is tested on skin from fair to deep and on women from their twenties to their seventies. Every product works across climate conditions, skin types, and life stages. If a product doesn't suit your skin, send it back within 30 days — even if you have opened it. Your trust matters more to us than a single sale.</p>
+        <p>Every formula is tested on skin from fair to deep and on women from their
+           twenties to their seventies. If a product does not suit your skin, send it back
+           within 30 days — even if you have opened it.</p>
+      </div>
+    </section>
+
+    <section class="about-section" id="about">
+      <div class="wrap">
+        <div class="sec-head">
+          <p class="eyebrow">About us</p>
+          <h2>Natural skincare, made by hand</h2>
+          <div class="rule"></div>
+          <p>Lara Beauty Atelier makes small-batch skincare from cold-pressed oils, raw butters and traditional West African botanicals — and ships it to women all over the world.</p>
+        </div>
+
+        <div class="about-grid">
+          <div class="about-card">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3s6 4 6 9a6 6 0 1 1-12 0c0-5 6-9 6-9Z"/></svg>
+            <h3>Naturally derived</h3>
+            <p>Cold-pressed oils, raw shea and plantain-ash black soap. No cheap filler oils, no synthetic dyes, never tested on animals.</p>
+          </div>
+          <div class="about-card">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM3 12h18M12 3c2.5 2.7 2.5 15 0 18"/></svg>
+            <h3>Two homes, one bench</h3>
+            <p>Dispatched from Lagos for Nigeria and from London for the UK and Europe — priced in Naira at home and Euros everywhere else.</p>
+          </div>
+          <div class="about-card">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6z"/></svg>
+            <h3>Say it plainly</h3>
+            <p>Full ingredient lists on every product, 30-day returns even if opened, and reviews published exactly as written — or not published at all.</p>
+          </div>
+          <div class="about-card">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9Z"/></svg>
+            <h3>For every shade</h3>
+            <p>Every formula is tested on skin from fair to deep and on women from their twenties to their seventies.</p>
+          </div>
+        </div>
+
+        <div class="about-stats">
+          <div><b>2</b><span>Cities we ship from</span></div>
+          <div><b>9</b><span>Products, no filler</span></div>
+          <div><b>30d</b><span>Returns window</span></div>
+          <div><b>100%</b><span>Small batch</span></div>
+        </div>
+
+        <p class="view-all"><a class="btn btn-primary" href="shop.html">Shop now</a></p>
       </div>
     </section>
 
@@ -132,8 +244,8 @@
           </div>
           <div class="val">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h13l3 4v5H4z"/></svg>
-            <h3>48-hour delivery</h3>
-            <p>Free above ₦25,000. Pay on delivery in major cities.</p>
+            <h3>Fast delivery</h3>
+            <p>Free above ₦25,000 in Nigeria or €40 worldwide. Pay on delivery in Lagos and Abuja.</p>
           </div>
           <div class="val">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7 9 18l-5-5"/></svg>
@@ -166,10 +278,13 @@
       <div class="foot">
         <div>
           <div class="logo">
-            <img src="assets/logo-transparent.png" alt="" width="44" height="43">
+            <picture>
+              <source srcset="assets/logo-transparent.webp" type="image/webp">
+              <img src="assets/logo-transparent.png" alt="" width="44" height="43" loading="lazy">
+            </picture>
             <span class="lt"><b>LARA BEAUTY</b><small>Atelier</small></span>
           </div>
-          <p>Small-batch skin glow oil, black soap and lip care, handmade in Abuja since 2020.</p>
+          <p>Small-batch skin glow oil, black soap and lip care. Made in Lagos, shipped from Lagos and London since 2020.</p>
         </div>
 
         <div>
@@ -189,6 +304,7 @@
             <li><a href="track.html">Track my order</a></li>
             <li><a href="delivery.html">Delivery &amp; returns</a></li>
             <li><a href="faq.html">FAQ</a></li>
+            <li><a href="journal.html">The Journal</a></li>
             <li><a href="contact.html">Contact us</a></li>
           </ul>
         </div>
@@ -199,7 +315,7 @@
             <li><a href="mailto:info.larabeautyatelier@gmail.com">info.larabeautyatelier@gmail.com</a></li>
             <li><a href="tel:+447527574282">+44 7527 574282</a></li>
             <li>@larabeautyatelier</li>
-            <li>Wuse II, Abuja, Nigeria</li>
+            <li>Online only · Lagos, Nigeria &amp; London, United Kingdom</li>
             <li>Mon–Sat, 9am–6pm</li>
           </ul>
         </div>
@@ -250,7 +366,10 @@
 
   <script src="data.js"></script>
   <script src="store.js"></script>
+  <script src="api.js"></script>
   <script src="email.js"></script>
+  <script src="payments.js"></script>
+  <script src="analytics.js"></script>
   <script src="site.js"></script>
 </body>
 </html>

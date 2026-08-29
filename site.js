@@ -1,14 +1,45 @@
 /* =============================================================================
-   Lara Beauty Atelier — shared front-end behaviour for the static pages
+   Lara Beauty Atelier — shared behaviour for the static multi-page build
    =============================================================================
-   Every page ships its content in the HTML. This file only adds the parts that
-   need to be dynamic: the bag, search, sorting, forms and order tracking.
+   Content lives in each HTML file. This adds only what must be dynamic:
+   currency, the bag, search, sorting, forms and order tracking.
    ========================================================================== */
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+/* -----------------------------------------------------------------------------
+   Currency
+   The build prints NGN into the markup and stashes EUR alongside it in
+   data attributes, so switching re-prices in place with no reload.
+   -------------------------------------------------------------------------- */
+/* The visible currency picker was removed: detection is automatic. Kept as a
+   guard so any page still carrying the old markup keeps working, and so a
+   picker can be reinstated later without touching call sites. */
+function renderCurrencySwitch() {
+  const sel = $('#cur-switch');
+  if (!sel || !SETTINGS.currencies) return;
+  sel.innerHTML = Object.values(SETTINGS.currencies)
+    .map(c => `<option value="${c.code}"${c.code === CURRENCY ? ' selected' : ''}>${esc(c.symbol)} ${c.code}</option>`)
+    .join('');
+}
+
+/** Announcement bar text depends on the active currency. */
+function repriceAnnounce() {
+  const el = document.querySelector('.announce');
+  const map = SETTINGS.announceByCurrency;
+  if (el && map && map[CURRENCY]) el.textContent = map[CURRENCY];
+}
+
+function repriceStaticMarkup() {
+  repriceAnnounce();
+  $$('[data-ngn]').forEach(el => {
+    const val = CURRENCY === 'EUR' ? Number(el.dataset.eur) : Number(el.dataset.ngn);
+    if (Number.isFinite(val)) el.textContent = money(val);
+  });
+}
 
 /* -----------------------------------------------------------------------------
    Bag state (shared across pages via localStorage)
@@ -22,7 +53,7 @@ function lineOf(l) {
   const p = P(l.id);
   if (!p) return null;
   const v = l.v && p.variants ? p.variants.find(x => x.label === l.v) : null;
-  return { p, v, price: v ? v.price : p.price };
+  return { p, v, price: priceOf(v || p) };
 }
 
 const subtotal = () => cart.reduce((s, l) => {
@@ -31,7 +62,7 @@ const subtotal = () => cart.reduce((s, l) => {
 }, 0);
 
 const shipping = () =>
-  (!cart.length || subtotal() >= SETTINGS.freeShip) ? 0 : SETTINGS.shipFee;
+  (!cart.length || subtotal() >= freeShipThreshold()) ? 0 : shipFeeAmount();
 
 function stockFor(id, label) {
   const p = P(id);
@@ -55,6 +86,10 @@ function addToCart(id, q = 1, v = null, silent) {
   line ? line.q += qty : cart.push({ id, q: qty, v });
   saveCart();
   syncCart(true);
+
+  if (typeof track === 'function') {
+    track('add_to_cart', { id, name: p.name, price: priceOf(P(id)), qty });
+  }
 
   if (qty < q) toast(`Only ${available} in stock — bag updated`);
   else if (!silent) { toast(`${p.name} added to bag`); openCart(); }
@@ -102,6 +137,51 @@ function setScrim(on) {
   s.classList.toggle('on', on);
   document.body.classList.toggle('lock', on);
 }
+
+/* -----------------------------------------------------------------------------
+   Theme
+   Default follows the operating system, so a visitor who prefers light gets it
+   without asking. An explicit choice is remembered and wins from then on.
+   -------------------------------------------------------------------------- */
+function currentTheme() {
+  return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+}
+
+function applyTheme(theme) {
+  const light = theme === 'light';
+  document.documentElement.setAttribute('data-theme', light ? 'light' : 'dark');
+  try { localStorage.setItem('lba_theme', light ? 'light' : 'dark'); } catch (e) {}
+
+  /* Keep the mobile browser chrome in step with the page. */
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.remove());
+  const meta = document.createElement('meta');
+  meta.name = 'theme-color';
+  meta.content = light ? '#FBF8F4' : '#0A0A0A';
+  document.head.appendChild(meta);
+
+  const btn = document.querySelector('.theme-btn');
+  if (btn) {
+    btn.setAttribute('aria-label',
+      light ? 'Switch to dark theme' : 'Switch to light theme');
+  }
+}
+
+function toggleTheme() {
+  applyTheme(currentTheme() === 'light' ? 'dark' : 'light');
+  toast(currentTheme() === 'light' ? 'Light theme' : 'Dark theme');
+}
+
+/* Follow the OS if the visitor has never chosen explicitly. */
+(function watchSystemTheme() {
+  if (!window.matchMedia) return;
+  const mq = matchMedia('(prefers-color-scheme: light)');
+  const handler = e => {
+    let saved = null;
+    try { saved = localStorage.getItem('lba_theme'); } catch (err) {}
+    if (!saved) applyTheme(e.matches ? 'light' : 'dark');
+  };
+  if (mq.addEventListener) mq.addEventListener('change', handler);
+})();
 
 function toggleMenu(open) {
   const nav = $('#mobile-nav');
@@ -153,7 +233,7 @@ function runSearch() {
     ? hits.map(p => `<a class="search-hit" href="product-${p.id}.html">
         <img src="${esc(p.images[0])}" alt="">
         <span><b>${esc(p.name)}</b><small>${esc(p.tagline)}</small></span>
-        <em>${money(p.price)}</em></a>`).join('')
+        <em>${money(priceOf(p))}</em></a>`).join('')
     : '<p class="muted no-hits">No products match that search.</p>';
 }
 
@@ -202,11 +282,11 @@ function syncCart(pop) {
     }).join('');
 
     const s = subtotal();
-    const left = SETTINGS.freeShip - s;
+    const left = freeShipThreshold() - s;
     foot.innerHTML = `
       ${left > 0
         ? `<div class="row"><span>Add ${money(left)} for free delivery</span></div>
-           <div class="bar u-mb-md"><i style="--bar-fill:${Math.min(100, s / SETTINGS.freeShip * 100)}%"></i></div>`
+           <div class="bar u-mb-md"><i style="--bar-fill:${Math.min(100, s / freeShipThreshold() * 100)}%"></i></div>`
         : `<div class="row"><span class="gold">✦ You've unlocked free delivery</span></div>`}
       <div class="row"><span>Subtotal</span><span>${money(s)}</span></div>
       <div class="row"><span>Delivery</span><span>${shipping() ? money(shipping()) : 'Free'}</span></div>
@@ -267,7 +347,7 @@ function renderCartPage() {
           <div class="row total"><span>Total</span><span>${money(s + sh)}</span></div>
         </div>
         <a class="btn btn-primary btn-block" href="checkout.html">Proceed to checkout</a>
-        <p class="muted summary-note">Free delivery over ${money(SETTINGS.freeShip)} · 30-day returns</p>
+        <p class="muted summary-note">Free delivery over ${money(freeShipThreshold())} · 30-day returns</p>
       </aside>
     </div>`;
 }
@@ -275,9 +355,16 @@ function renderCartPage() {
 /* -----------------------------------------------------------------------------
    checkout.html
    -------------------------------------------------------------------------- */
+let checkoutTracked = false;
+
 function renderCheckoutSummary() {
   const items = $('#summary-items');
   if (!items) return;
+
+  if (!checkoutTracked && cart.length && typeof track === 'function') {
+    checkoutTracked = true;
+    track('begin_checkout', { total: subtotal() + shipping() });
+  }
 
   if (!cart.length) {
     $('#checkout-root').innerHTML = `<div class="done">
@@ -308,36 +395,77 @@ function renderCheckoutSummary() {
   if (btn) btn.textContent = `Place order · ${money(s + sh)}`;
 }
 
-function placeOrder(event) {
+async function placeOrder(event) {
   event.preventDefault();
   const form = event.target;
   if (!form.checkValidity()) return form.reportValidity();
   if (!cart.length) { toast('Your bag is empty'); return; }
+
+  const btn = form.querySelector('#place-order');
+  const label = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Processing…';
 
   const d = Object.fromEntries(new FormData(form));
   const s = subtotal();
   const sh = shipping();
   const ref = 'LB-' + Math.floor(10000 + Math.random() * 89999);
 
-  cart.forEach(l => {
-    const p = P(l.id);
-    if (!p) return;
-    const v = l.v && p.variants ? p.variants.find(x => x.label === l.v) : null;
-    if (v) v.stock = Math.max(0, v.stock - l.q);
-    else p.stock = Math.max(0, (p.stock || 0) - l.q);
-  });
-  saveProducts();
-
   const order = {
     ref, date: new Date().toISOString(),
     name: `${d.first} ${d.last}`, email: d.email, phone: d.phone,
     addr: `${d.addr}, ${d.city}`, state: d.state, note: d.note || '',
     items: cart.map(l => ({ id: l.id, q: l.q, v: l.v })),
-    sub: s, ship: sh, total: s + sh, pay: d.pay, status: 'pending'
+    sub: s, ship: sh, total: s + sh, pay: d.pay, status: 'pending',
+    currency: CURRENCY, paid: false
   };
+
+  // Card payments go through Paystack first. Bank transfer and pay-on-delivery
+  // are settled off-site, so those orders are recorded straight away.
+  if (d.pay === 'card') {
+    try {
+      const result = await takePayment(order);
+      if (result.paid) {
+        order.paid = true;
+        order.status = 'processing';
+        order.paymentRef = result.reference;
+      }
+      // result.skipped means payments are switched off — record the order anyway.
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = label;
+      toast('Payment cancelled — your bag is still here');
+      return;
+    }
+  }
+
+  // Only reduce stock once we know the order is going ahead.
+  cart.forEach(l => {
+    const p = P(l.id);
+    if (!p) return;
+    let v = l.v && p.variants ? p.variants.find(x => x.label === l.v) : null;
+    // A single-variant product renders no size buttons, so the cart line has
+    // no label — but the real stock still lives on that one variant. Without
+    // this the deduction went to p.stock, which nothing reads, and the item
+    // could be oversold indefinitely.
+    if (!v && p.variants && p.variants.length === 1) v = p.variants[0];
+    if (v) v.stock = Math.max(0, (+v.stock || 0) - l.q);
+    else p.stock = Math.max(0, (+p.stock || 0) - l.q);
+  });
+  saveProducts();
+
+  /* Tell the server, which owns the authoritative stock figure. Local
+     deduction above is only an optimistic hint for this browser. */
+  if (typeof API !== 'undefined' && API.enabled) {
+    try { await API.recordOrder(order.items); } catch (err) { /* order stands */ }
+  }
+
   ORDERS.unshift(order);
   saveOrders();
-  mailOrder(order);
+  /* Awaited: fire-and-forget lost notifications when the buyer closed the tab
+     straight after paying. The confirmation page can wait ~200ms. */
+  try { await mailOrder(order); } catch (err) { /* order still stands */ }
+  if (typeof track === 'function') track('purchase', order);
 
   sessionStorage.setItem('lba_last_order', JSON.stringify(order));
   cart = [];
@@ -387,7 +515,7 @@ function doTrack(event) {
       return p ? `<div class="sum-item"><img src="${esc(p.images[0])}" alt="">
         <div><b class="u-medium">${esc(p.name)}</b>
           <div class="q">${l.v ? esc(l.v) + ' · ' : ''}Qty ${l.q}</div></div>
-        <span>${money(p.price * l.q)}</span></div>` : '';
+        <span>${money(priceOf(p) * l.q)}</span></div>` : '';
     }).join('')}
     <div class="row total totals-block"><span>Total</span><span>${money(order.total)}</span></div>
     <p class="muted track-meta">Placed ${new Date(order.date).toLocaleDateString('en-GB',
@@ -396,7 +524,7 @@ function doTrack(event) {
 }
 
 /* -----------------------------------------------------------------------------
-   Product page interactions
+   Product page
    -------------------------------------------------------------------------- */
 const sel = { v: null, rate: 5 };
 
@@ -405,6 +533,11 @@ function initProductPage() {
   if (!btn) return;
   const active = $('.vopt.on');
   sel.v = active ? active.dataset.arg2 : null;
+
+  const product = P(btn.dataset.arg);
+  if (product && typeof track === 'function') {
+    track('view_item', { id: product.id, name: product.name, price: priceOf(product) });
+  }
 }
 
 function pickVar(id, label) {
@@ -413,13 +546,18 @@ function pickVar(id, label) {
   $$('.vopt').forEach(b => b.classList.toggle('on', b === chosen));
   if (!chosen) return;
 
-  const price = Number(chosen.dataset.price);
+  const price = Number(CURRENCY === 'EUR' ? chosen.dataset.eur : chosen.dataset.price);
   const stock = Number(chosen.dataset.stock);
   const p = P(id);
-  const sale = p.compare && p.compare > price;
+  // A "was" price belongs to the headline variant only — showing it against a
+  // cheaper size invents a discount that never existed.
+  const cmp = price === priceOf(p) ? compareOf(p) : null;
+  const sale = cmp && cmp > price;
 
   $('#ppr').innerHTML = money(price) +
-    (sale ? `<s>${money(p.compare)}</s><span class="save">Save ${money(p.compare - price)}</span>` : '');
+    (sale ? `<s>${money(cmp)}</s><span class="save">Save ${money(cmp - price)}</span>` : '');
+
+  syncBuyBarPrice(price);
 
   const box = $('#pstock');
   const add = $('#atb');
@@ -438,6 +576,15 @@ function pickVar(id, label) {
 function showImage(i, src) {
   const img = $('#gimg');
   if (!img) return;
+  // Keep the WebP <source> in step, otherwise the browser keeps serving the
+  // first image because <source> outranks the <img> src.
+  const btn = $$('.thumbs button')[i];
+  const pict = img.parentElement;
+  const sources = pict ? pict.querySelectorAll('source') : [];
+  const webpset = btn && btn.dataset.webpset;
+  const jpgset = btn && btn.dataset.jpgset;
+  if (sources[0]) sources[0].srcset = webpset || src.replace(/\.(jpg|jpeg|png)$/i, '.webp');
+  if (sources[1]) sources[1].srcset = jpgset || src;
   img.src = src;
   img.style.animation = 'none';
   void img.offsetWidth;
@@ -455,21 +602,44 @@ function pickRate(n) {
   $$('#rp button').forEach(b => b.classList.toggle('on', Number(b.dataset.n) <= n));
 }
 
-function submitReview(event) {
+async function submitReview(event) {
   event.preventDefault();
   const form = event.target;
   if (!form.checkValidity()) return form.reportValidity();
 
-  const p = P(form.dataset.product);
   const d = Object.fromEntries(new FormData(form));
-  p.reviews.push({
-    n: d.name, r: sel.rate, t: d.title, b: d.body,
-    d: new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
-    v: false, ok: false
-  });
-  saveProducts();
+  const pid = form.dataset.product;
+  const btn = form.querySelector('[type="submit"]');
+  const entry = {
+    pid, n: d.name, r: sel.rate, t: d.title, b: d.body
+  };
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+
+  /* Send it to the shared store so staff see it on their own device. Falls
+     back to this browser's copy when the API is unavailable, so a shopper on
+     a flaky connection never loses what they typed. */
+  let sent = false;
+  try {
+    await API.submitReview(entry);
+    sent = true;
+  } catch (err) {
+    const p = P(pid);
+    if (p) {
+      p.reviews.push({
+        n: d.name, r: sel.rate, t: d.title, b: d.body,
+        d: new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
+        v: false, ok: false
+      });
+      saveProducts();
+    }
+  }
+
+  if (btn) { btn.disabled = false; btn.textContent = 'Submit review'; }
   form.reset();
-  toast('Thank you — your review is awaiting approval');
+  toast(sent
+    ? 'Thank you — your review is awaiting approval'
+    : 'Thank you — saved, we will publish it once verified');
 }
 
 function toggleAccordion(header) {
@@ -479,23 +649,45 @@ function toggleAccordion(header) {
 }
 
 /* -----------------------------------------------------------------------------
-   Listing sort
+   Sticky buy bar
+   Shows only once the real Add-to-bag has scrolled past, so it never competes
+   with the button it mirrors.
+   -------------------------------------------------------------------------- */
+function initBuyBar() {
+  const bar = $('#buybar');
+  const anchor = $('.buy');
+  if (!bar || !anchor || !('IntersectionObserver' in window)) return;
+
+  const io = new IntersectionObserver(([entry]) => {
+    const show = !entry.isIntersecting && entry.boundingClientRect.top < 0;
+    bar.classList.toggle('on', show);
+    bar.setAttribute('aria-hidden', String(!show));
+  }, { rootMargin: '0px 0px -100% 0px' });
+
+  io.observe(anchor);
+}
+
+/** Keep the sticky bar's price in step with the chosen variant. */
+function syncBuyBarPrice(price) {
+  const el = $('#buybar-price');
+  if (el) el.textContent = money(price);
+}
+
+/* -----------------------------------------------------------------------------
+   Listing sort — always sorts on the NGN figure so order is currency-agnostic
    -------------------------------------------------------------------------- */
 function sortGrid() {
   const grid = $('#grid');
   const mode = $('#sort').value;
   const cards = $$('#grid .card');
 
-  const priceOf = c => {
-    const t = c.querySelector('.price').firstChild.textContent.replace(/[^\d]/g, '');
-    return Number(t);
-  };
+  const priceOfCard = c => Number(c.querySelector('.price [data-ngn]')?.dataset.ngn || 0);
   const rateOf = c => parseFloat(c.querySelector('.stars span').textContent) || 0;
   const nameOf = c => c.querySelector('h3').textContent.trim();
 
   const sorted = [...cards];
-  if (mode === 'low') sorted.sort((a, b) => priceOf(a) - priceOf(b));
-  if (mode === 'high') sorted.sort((a, b) => priceOf(b) - priceOf(a));
+  if (mode === 'low') sorted.sort((a, b) => priceOfCard(a) - priceOfCard(b));
+  if (mode === 'high') sorted.sort((a, b) => priceOfCard(b) - priceOfCard(a));
   if (mode === 'rate') sorted.sort((a, b) => rateOf(b) - rateOf(a));
   if (mode === 'az') sorted.sort((a, b) => nameOf(a).localeCompare(nameOf(b)));
   if (mode === 'feat') sorted.sort((a, b) => cards.indexOf(a) - cards.indexOf(b));
@@ -506,15 +698,37 @@ function sortGrid() {
 /* -----------------------------------------------------------------------------
    Newsletter + contact
    -------------------------------------------------------------------------- */
-function subscribe(event) {
+async function subscribe(event) {
   event.preventDefault();
   const input = event.target.querySelector('input');
   const email = input.value.trim();
+  if (!email) return;
+
+  const btn = event.target.querySelector('[type="submit"]');
+  const label = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Joining…'; }
+
+  /* Local copy first so nothing is ever lost. */
   if (!SUBS.find(s => s.email === email)) {
     SUBS.push({ email, d: new Date().toISOString().slice(0, 10) });
     saveSubs();
-    mailSubscriber(email);
   }
+
+  /* Then the shared list. Previously a subscriber only ever existed in their
+     OWN browser — the list was unreachable and unusable. This posts to
+     /api/subscribe, which stores it centrally and forwards to a real email
+     platform when one is configured. */
+  try {
+    if (typeof API !== 'undefined' && API.enabled) {
+      await API.subscribe(email);
+    } else {
+      mailSubscriber(email);
+    }
+  } catch (err) {
+    mailSubscriber(email);            // fall back to the message log
+  }
+
+  if (btn) { btn.disabled = false; btn.textContent = label; }
   event.target.reset();
   toast(CONTENT.news.success);
 }
@@ -542,6 +756,7 @@ function sendEnquiry(event) {
    -------------------------------------------------------------------------- */
 const ACTIONS = {
   'search': openSearch,
+  'theme': () => toggleTheme(),
   'menu-open': () => toggleMenu(true),
   'menu-close': () => toggleMenu(false),
   'close-overlays': closeAll,
@@ -570,7 +785,9 @@ document.addEventListener('click', event => {
   }
   const actEl = event.target.closest('[data-action]');
   if (actEl && ACTIONS[actEl.dataset.action]) {
-    event.preventDefault();
+    // Links that also close the menu must still follow their href.
+    const isLink = actEl.tagName === 'A' && actEl.getAttribute('href');
+    if (!isLink) event.preventDefault();
     ACTIONS[actEl.dataset.action]();
   }
 });
@@ -590,6 +807,7 @@ document.addEventListener('input', event => {
 
 document.addEventListener('change', event => {
   if (event.target.id === 'sort') sortGrid();
+  if (event.target.id === 'cur-switch') setCurrency(event.target.value);
 });
 
 document.addEventListener('keydown', event => {
@@ -601,16 +819,24 @@ addEventListener('scroll',
   () => $('#site-header')?.classList.toggle('stuck', scrollY > 12),
   { passive: true });
 
-/* Keep tabs in sync */
+document.addEventListener('db:currency', () => {
+  repriceStaticMarkup();
+  renderCurrencySwitch();
+  syncCart();
+  initProductPage();
+});
+
 document.addEventListener('db:products', () => location.reload());
 
 /* -----------------------------------------------------------------------------
    Boot
    -------------------------------------------------------------------------- */
+renderCurrencySwitch();
+repriceStaticMarkup();
 initProductPage();
+initBuyBar();
 syncCart();
 renderConfirmation();
 
-// deep link: track.html?ref=LB-10480
 const refParam = new URLSearchParams(location.search).get('ref');
 if (refParam && $('#tref')) { $('#tref').value = refParam; doTrack(); }

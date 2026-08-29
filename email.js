@@ -54,6 +54,14 @@ function logMessage(entry) {
     ...entry
   });
   DB.write('lba_messages', list.slice(0, 500));
+
+  /* Also push it to the shared inbox, otherwise an enquiry typed on a
+     customer's phone stays on that phone and the admin never sees it.
+     Fire-and-forget: the local copy above is the safety net. */
+  if (typeof API !== 'undefined' && API.enabled) {
+    API.logMessageRemote(entry).catch(() => { /* kept locally */ });
+  }
+
   return list[0].id;
 }
 
@@ -148,6 +156,66 @@ function mailEnquiry({ name, email, phone, message }) {
     subject: `Website enquiry from ${name}`,
     name, email, phone, body: message
   });
+}
+
+/* -----------------------------------------------------------------------------
+   Outbound staff mail — Admin → Messages → Compose
+
+   A static site cannot send mail to an arbitrary recipient on its own: there is
+   no server to hold a credential. So there are exactly two honest options, and
+   sendStaffMail picks whichever the store is configured for:
+
+     'emailjs'  Real send, straight from the browser, to whoever you type.
+                This is the ONLY provider that can do that, because EmailJS
+                holds your Gmail/Outlook credential on their side.
+
+     anything   Falls back to opening the staff member's own mail client with
+     else       the message pre-filled (mailto:). They press send. Slower, but
+                it works everywhere and the reply lands in their real inbox.
+
+   Formspree and Netlify Forms are deliberately NOT used here: both deliver only
+   to the site owner's fixed address, so a "reply to the customer" that silently
+   went to yourself would be worse than no feature at all.
+   -------------------------------------------------------------------------- */
+function canSendDirect() {
+  return MAIL.provider === 'emailjs'
+    && !!(MAIL.emailjs.serviceId && MAIL.emailjs.templateId && MAIL.emailjs.publicKey)
+    && !!window.emailjs;
+}
+
+async function sendStaffMail({ to, subject, body, replyTo }) {
+  const id = logMessage({
+    type: 'outbound', subject, name: to, email: to, body,
+    meta: { direction: 'outbound', to }
+  });
+
+  if (canSendDirect()) {
+    try {
+      await emailjs.send(MAIL.emailjs.serviceId, MAIL.emailjs.templateId, {
+        to_email: to,
+        _subject: subject,
+        subject,
+        message: body,
+        reply_to: replyTo || MAIL.to,
+        name: 'Lara Beauty Atelier',
+        email: MAIL.to,
+        sentFrom: location.href
+      }, MAIL.emailjs.publicKey);
+      markDelivered(id, true);
+      return { ok: true, method: 'emailjs' };
+    } catch (err) {
+      console.warn('[mail] EmailJS send failed:', err);
+      markDelivered(id, false);
+      return { ok: false, method: 'emailjs', error: err };
+    }
+  }
+
+  /* Fallback: hand it to the staff member's own mail client. */
+  const href = `mailto:${encodeURIComponent(to)}`
+    + `?subject=${encodeURIComponent(subject)}`
+    + `&body=${encodeURIComponent(body)}`;
+  window.location.href = href;
+  return { ok: true, method: 'mailto' };
 }
 
 function mailSubscriber(email) {

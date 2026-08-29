@@ -1,0 +1,197 @@
+/* =============================================================================
+   /api/data — backup, restore and wipe
+   -----------------------------------------------------------------------------
+   The admin already had "Export all data" and "Reset to demo data", but both
+   only touched localStorage — this browser's copy. Once the site went live that
+   became actively misleading: you could press Reset, watch the dashboard empty,
+   and every shopper would still see the old prices and reviews because the
+   server was untouched.
+
+   This endpoint operates on the real stores, so a backup is a real backup and a
+   wipe is a real wipe.
+
+     GET  /api/data                    download everything as JSON   (staff)
+     POST /api/data { action:'import', data, mode }                  (staff)
+     POST /api/data { action:'wipe', scope, confirm:'DELETE' }       (staff)
+
+   `mode` on import:
+     'merge'    (default) add to what is there, existing ids win
+     'replace'  discard current contents of each store present in the file
+
+   `scope` on wipe:
+     'orders' | 'reviews' | 'subscribers' | 'catalogue' | 'demo' | 'everything'
+
+   'demo' is the useful one before launch: it removes the seeded sample reviews
+   and demo orders but keeps your real catalogue, so you go live with an honest
+   empty shop rather than fake social proof.
+   ========================================================================== */
+
+import { getStore } from '@netlify/blobs';
+
+/* Every store the site writes to, and the key inside it. Kept in one place so
+   a new store cannot be quietly missed by a backup. */
+const STORES = [
+  { store: 'lara-catalogue',   key: 'catalogue-v1',   label: 'catalogue' },
+  { store: 'lara-reviews',     key: 'reviews-v1',     label: 'reviews' },
+  { store: 'lara-messages',    key: 'messages-v1',    label: 'messages' },
+  { store: 'lara-subscribers', key: 'subscribers-v1', label: 'subscribers' }
+];
+
+const json = (body, status = 200) => new Response(JSON.stringify(body), {
+  status,
+  headers: {
+    'content-type': 'application/json',
+    'cache-control': 'no-store',
+    'access-control-allow-origin': '*',
+    'access-control-allow-headers': 'content-type, x-admin-token',
+    'access-control-allow-methods': 'GET, POST, OPTIONS'
+  }
+});
+
+const isStaff = req => {
+  const expected = process.env.ADMIN_TOKEN;
+  return !!expected && req.headers.get('x-admin-token') === expected;
+};
+
+const open = name => getStore({ name, consistency: 'strong' });
+
+export default async (req) => {
+  if (req.method === 'OPTIONS') return json({});
+
+  /* Everything here is destructive or exposes customer data, so there is no
+     public path at all. */
+  if (!isStaff(req)) return json({ error: 'unauthorised' }, 401);
+
+  /* ---- export ------------------------------------------------------------ */
+  if (req.method === 'GET') {
+    const out = {
+      _format: 'lara-beauty-backup',
+      _version: 1,
+      _exportedAt: new Date().toISOString(),
+      data: {}
+    };
+    for (const s of STORES) {
+      out.data[s.label] = (await open(s.store).get(s.key, { type: 'json' })) ?? null;
+    }
+    /* A rough count helps the person restoring sanity-check the file. */
+    out._summary = {
+      products: out.data.catalogue?.published?.products?.length ?? 0,
+      reviews: Object.values(out.data.reviews || {}).reduce((n, a) => n + a.length, 0),
+      messages: (out.data.messages || []).length,
+      subscribers: (out.data.subscribers || []).length
+    };
+    return json(out);
+  }
+
+  if (req.method !== 'POST') return json({ error: 'method not allowed' }, 405);
+
+  let payload;
+  try { payload = await req.json(); }
+  catch { return json({ error: 'bad json' }, 400); }
+
+  /* ---- import ------------------------------------------------------------ */
+  if (payload.action === 'import') {
+    const file = payload.data;
+    if (!file || typeof file !== 'object') return json({ error: 'no data supplied' }, 400);
+
+    /* Accept either the whole downloaded file or just its data section, so
+       pasting either shape works. */
+    const incoming = file.data && file._format === 'lara-beauty-backup' ? file.data : file;
+    const mode = payload.mode === 'replace' ? 'replace' : 'merge';
+    const applied = {};
+
+    for (const s of STORES) {
+      const next = incoming[s.label];
+      if (next === undefined) continue;               // not in the file, leave alone
+
+      if (mode === 'replace' || next === null) {
+        await open(s.store).setJSON(s.key, next);
+        applied[s.label] = 'replaced';
+        continue;
+      }
+
+      const current = (await open(s.store).get(s.key, { type: 'json' })) ?? null;
+
+      /* Merge shape depends on the store: reviews are keyed by product,
+         messages and subscribers are arrays, the catalogue is a single doc. */
+      let merged = next;
+      if (Array.isArray(next) && Array.isArray(current)) {
+        const seen = new Set(current.map(x => x.id || x.email));
+        merged = [...current, ...next.filter(x => !seen.has(x.id || x.email))];
+      } else if (current && !Array.isArray(next) && s.label === 'reviews') {
+        merged = { ...current };
+        for (const [pid, list] of Object.entries(next)) {
+          const have = new Set((merged[pid] || []).map(r => r.id));
+          merged[pid] = [...(merged[pid] || []), ...list.filter(r => !have.has(r.id))];
+        }
+      }
+      await open(s.store).setJSON(s.key, merged);
+      applied[s.label] = mode;
+    }
+    return json({ ok: true, mode, applied });
+  }
+
+  /* ---- wipe -------------------------------------------------------------- */
+  if (payload.action === 'wipe') {
+    /* Deliberate friction: the caller must send the literal word DELETE. An
+       accidental request cannot empty the shop. */
+    if (payload.confirm !== 'DELETE') {
+      return json({ error: "send confirm:'DELETE' to proceed" }, 400);
+    }
+
+    const scope = payload.scope || 'everything';
+    const cleared = [];
+
+    const clear = async (label, value) => {
+      const s = STORES.find(x => x.label === label);
+      if (!s) return;
+      await open(s.store).setJSON(s.key, value);
+      cleared.push(label);
+    };
+
+    if (scope === 'demo') {
+      /* Remove seeded sample content only, keeping the real catalogue. Seed
+         reviews are the ones imported from data.js, marked src:'seed'. */
+      const s = STORES.find(x => x.label === 'reviews');
+      const all = (await open(s.store).get(s.key, { type: 'json' })) || {};
+      const kept = {};
+      let removed = 0;
+      for (const [pid, list] of Object.entries(all)) {
+        const real = list.filter(r => r.src !== 'seed');
+        removed += list.length - real.length;
+        if (real.length) kept[pid] = real;
+      }
+      await open(s.store).setJSON(s.key, kept);
+      await clear('messages', []);
+      return json({ ok: true, scope, seedReviewsRemoved: removed, cleared: ['reviews (seed only)', 'messages'] });
+    }
+
+    if (scope === 'everything') {
+      await clear('reviews', {});
+      await clear('messages', []);
+      await clear('subscribers', []);
+      await clear('catalogue', { draft: null, published: null, rollback: null, version: 0, publishedAt: null });
+    } else if (scope === 'orders') {
+      /* Orders live in the message log alongside enquiries. */
+      const s = STORES.find(x => x.label === 'messages');
+      const all = (await open(s.store).get(s.key, { type: 'json' })) || [];
+      const kept = all.filter(m => m.type !== 'order');
+      await open(s.store).setJSON(s.key, kept);
+      cleared.push(`orders (${all.length - kept.length} removed)`);
+    } else if (scope === 'reviews') {
+      await clear('reviews', {});
+    } else if (scope === 'subscribers') {
+      await clear('subscribers', []);
+    } else if (scope === 'catalogue') {
+      await clear('catalogue', { draft: null, published: null, rollback: null, version: 0, publishedAt: null });
+    } else {
+      return json({ error: 'unknown scope' }, 400);
+    }
+
+    return json({ ok: true, scope, cleared });
+  }
+
+  return json({ error: 'unknown action' }, 400);
+};
+
+export const config = { path: '/api/data' };
