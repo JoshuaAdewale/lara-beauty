@@ -72,13 +72,25 @@ async function notify(entry) {
           authorization: `Bearer ${process.env.RESEND_KEY}`
         },
         body: JSON.stringify({
-          from: process.env.NOTIFY_FROM || 'orders@resend.dev',
+          /* Resend's shared sandbox sender is EXACTLY 'onboarding@resend.dev'.
+             Any other @resend.dev address is rejected, so a wrong default here
+             means order emails fail silently until a domain is verified.
+             Set NOTIFY_FROM to orders@larabeautyatelier.com once the domain is
+             verified at resend.com/domains. */
+          from: process.env.NOTIFY_FROM || 'Lara Beauty Atelier <onboarding@resend.dev>',
           to: [to],
           subject,
           text: lines,
           reply_to: entry.email || undefined
         })
       });
+      if (!r.ok) {
+        /* Log the provider's reason. Without this a rejected sender address or
+           an unverified domain looks identical to "no email configured", and
+           you find out by never receiving an order. */
+        const why = await r.text().catch(() => '');
+        console.error('Resend rejected the email:', r.status, why.slice(0, 400));
+      }
       return r.ok ? 'resend' : `resend-failed-${r.status}`;
     }
 
